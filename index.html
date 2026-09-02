@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0D1B2A">
+<link rel="manifest" href="manifest.json">
+<title>Flashipping — Caisse</title>
+<style>
+:root{
+  --encre:#0D1B2A;
+  --encre-clair:#1B3A57;
+  --papier:#F5F3EE;
+  --carte:#FFFFFF;
+  --signal:#E8A33D;
+  --vert:#2F7D5B;
+  --rouge:#B3352C;
+  --gris:#6B7684;
+  --trait:#DCD8CF;
+  --r:10px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--papier);
+  color:var(--encre);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:16px;line-height:1.45;
+  padding-bottom:84px;
+}
+button,input,select,textarea{font-family:inherit;font-size:16px}
+
+/* ---------- barre de statut reseau ---------- */
+#reseau{
+  position:sticky;top:0;z-index:50;
+  padding:7px 16px;font-size:13px;font-weight:600;
+  display:flex;justify-content:space-between;align-items:center;
+  color:#fff;background:var(--vert);
+}
+#reseau.hors-ligne{background:var(--encre-clair)}
+#reseau.attente{background:var(--signal);color:var(--encre)}
+
+/* ---------- entete ---------- */
+header{
+  background:var(--encre);color:#fff;
+  padding:20px 16px 22px;
+}
+header h1{margin:0;font-size:19px;font-weight:700;letter-spacing:-.01em}
+header p{margin:3px 0 0;font-size:12px;color:#8FA3B8}
+
+.solde-bloc{margin-top:18px}
+.solde-bloc .label{font-size:12px;color:#8FA3B8;margin-bottom:2px}
+.solde-bloc .montant{
+  font-size:34px;font-weight:700;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;line-height:1.1;
+}
+.solde-bloc .second{font-size:13px;color:#8FA3B8;margin-top:2px}
+.solde-bloc .montant.neg{color:#FF8A7A}
+
+/* ---------- contenu ---------- */
+main{padding:16px}
+section{display:none}
+section.actif{display:block}
+
+h2{font-size:17px;margin:0 0 12px;font-weight:700}
+.carte{
+  background:var(--carte);border:1px solid var(--trait);
+  border-radius:var(--r);padding:14px;margin-bottom:12px;
+}
+
+/* ---------- formulaires ---------- */
+label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px;color:var(--encre-clair)}
+input,select,textarea{
+  width:100%;padding:12px;border:1px solid var(--trait);
+  border-radius:8px;background:#fff;color:var(--encre);
+}
+input:focus,select:focus,textarea:focus{
+  outline:2px solid var(--signal);outline-offset:-1px;border-color:var(--signal);
+}
+.paire{display:flex;gap:10px}
+.paire>div{flex:1}
+.paire>div.etroit{flex:0 0 108px}
+
+.bascule{display:flex;gap:8px;margin-top:5px}
+.bascule button{
+  flex:1;padding:12px;border:1px solid var(--trait);background:#fff;
+  border-radius:8px;font-weight:600;color:var(--gris);cursor:pointer;
+}
+.bascule button.on{background:var(--encre);color:#fff;border-color:var(--encre)}
+
+.coche{display:flex;align-items:flex-start;gap:10px;margin-top:16px}
+.coche input{width:22px;height:22px;flex:0 0 22px;margin-top:1px}
+.coche span{font-size:13px;color:var(--gris);line-height:1.35}
+
+.principal{
+  width:100%;margin-top:18px;padding:16px;border:0;border-radius:8px;
+  background:var(--signal);color:var(--encre);font-weight:700;font-size:16px;cursor:pointer;
+  transition:transform .06s ease, filter .12s ease;
+  position:relative;
+}
+.principal:active{transform:scale(.97);filter:brightness(.92)}
+.principal:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+/* bouton en cours d'envoi */
+.principal.charge{
+  color:transparent;pointer-events:none;
+  background:var(--encre-clair);
+}
+.principal.charge::after{
+  content:"";position:absolute;top:50%;left:50%;
+  width:20px;height:20px;margin:-10px 0 0 -10px;
+  border:2.5px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;
+  animation:tourne .65s linear infinite;
+}
+@keyframes tourne{to{transform:rotate(360deg)}}
+
+/* retour tactile general */
+.bascule button{transition:transform .06s ease}
+.bascule button:active{transform:scale(.96)}
+.periodes button{transition:transform .06s ease}
+.periodes button:active{transform:scale(.94)}
+nav button{transition:transform .06s ease}
+nav button:active{transform:scale(.92)}
+
+/* flash de confirmation sur la carte */
+@keyframes flashOk{
+  0%{background:#E4F0EA;border-color:var(--vert)}
+  100%{background:var(--carte);border-color:var(--trait)}
+}
+.carte.valide{animation:flashOk 1.1s ease}
+
+.apercu{
+  margin-top:12px;padding:10px 12px;background:#F0EEE8;
+  border-radius:8px;font-size:13px;color:var(--gris);
+  font-variant-numeric:tabular-nums;
+}
+
+/* ---------- messages ---------- */
+.msg{padding:12px 14px;border-radius:8px;font-size:14px;margin-bottom:12px;display:none}
+.msg.ok{display:block;background:#E4F0EA;color:var(--vert);border:1px solid #BFDCCD}
+.msg.err{display:block;background:#F8E6E4;color:var(--rouge);border:1px solid #E8C4C0}
+
+/* ---------- listes ---------- */
+.ligne{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:11px 0;border-bottom:1px solid var(--trait);gap:12px;
+}
+.ligne:last-child{border-bottom:0}
+.ligne .g{min-width:0}
+.ligne .nom{font-weight:600;font-size:15px}
+.ligne .meta{font-size:12px;color:var(--gris)}
+.ligne .val{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ligne .val.neg{color:var(--rouge)}
+.ligne .val.pos{color:var(--vert)}
+
+.puce{
+  display:inline-block;padding:2px 7px;border-radius:20px;
+  font-size:11px;font-weight:600;background:#F0EEE8;color:var(--gris);
+}
+.puce.attente{background:#FBEEDA;color:#8A5D12}
+
+/* ---------- rapports ---------- */
+.periodes{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.periodes button{
+  padding:9px 13px;border:1px solid var(--trait);background:#fff;
+  border-radius:20px;font-size:13px;font-weight:600;color:var(--gris);cursor:pointer;
+}
+.periodes button.on{background:var(--encre);color:#fff;border-color:var(--encre)}
+
+.chiffres{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.chiffre{background:var(--carte);border:1px solid var(--trait);border-radius:var(--r);padding:12px}
+.chiffre .t{font-size:12px;color:var(--gris)}
+.chiffre .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.chiffre .v.neg{color:var(--rouge)}
+.chiffre .v.pos{color:var(--vert)}
+
+/* ---------- navigation ---------- */
+nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:60;
+  display:flex;background:var(--carte);border-top:1px solid var(--trait);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+nav button{
+  flex:1;padding:11px 4px 13px;border:0;background:none;
+  color:var(--gris);font-size:11px;font-weight:600;cursor:pointer;
+}
+nav button .ic{display:block;font-size:19px;margin-bottom:2px}
+nav button.on{color:var(--encre)}
+
+.vide{text-align:center;padding:28px 16px;color:var(--gris);font-size:14px}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important}
+  .carte.valide{animation:none!important}
+  /* on garde le spinner : c'est un temoin d'etat, pas une decoration */
+  .principal.charge::after{animation:tourne 1.2s linear infinite!important}
+}
+</style>
+</head>
+<body>
+
+<div id="reseau">
+  <span id="reseau-txt">Connexion…</span>
+  <span id="reseau-file"></span>
+</div>
+
+<header>
+  <h1>Flashipping</h1>
+  <p>PI RAPID · PI SEKIRIZE · PI BA PRI</p>
+  <div class="solde-bloc">
+    <div class="label">Solde entreprise disponible</div>
+    <div class="montant" id="solde-ent">—</div>
+    <div class="second" id="solde-ent-usd"></div>
+  </div>
+</header>
+
+<main>
+  <!-- ============ DEPENSE ============ -->
+  <section id="v-depense" class="actif">
+    <h2>Enregistrer une dépense</h2>
+    <div class="msg" id="msg-dep"></div>
+    <div class="carte">
+      <label for="d-date">Date</label>
+      <input type="date" id="d-date">
+
+      <label for="d-objet">Objet de la dépense</label>
+      <select id="d-objet"></select>
+
+      <label for="d-agence">Agence</label>
+      <select id="d-agence"></select>
+
+      <div class="paire">
+        <div>
+          <label for="d-montant">Montant</label>
+          <input type="number" id="d-montant" inputmode="decimal" step="0.01" placeholder="0.00">
+        </div>
+        <div class="etroit">
+          <label>Devise</label>
+          <div class="bascule" id="d-devise">
+            <button type="button" class="on" data-v="Gourdes">Gdes</button>
+            <button type="button" data-v="USD">USD</button>
+          </div>
+        </div>
+      </div>
+
+      <label for="d-desc">Description</label>
+      <input type="text" id="d-desc" placeholder="Ex : lot Boxpaq semaine 24 août">
+
+      <div class="apercu" id="d-apercu">Saisissez un montant pour voir la conversion.</div>
+
+      <label class="coche">
+        <input type="checkbox" id="d-urgente">
+        <span>Dépense urgente déjà payée. À cocher seulement si l'argent est sorti et que le solde ne couvre pas — la ligne partira dans « À régulariser ».</span>
+      </label>
+
+      <button class="principal" id="d-envoyer">Enregistrer la dépense</button>
+    </div>
+  </section>
+
+  <!-- ============ REVENU ============ -->
+  <section id="v-revenu">
+    <h2>Enregistrer un revenu</h2>
+    <div class="msg" id="msg-rev"></div>
+    <div class="carte">
+      <label for="r-date">Date</label>
+      <input type="date" id="r-date">
+
+      <label for="r-source">Source</label>
+      <select id="r-source">
+        <option>Colis Livre</option>
+        <option>Commission Commande</option>
+        <option>Fret Aerien</option>
+        <option>Fret Maritime</option>
+        <option>Autre Revenu</option>
+      </select>
+
+      <label for="r-agence">Agence</label>
+      <select id="r-agence"></select>
+
+      <div class="paire">
+        <div>
+          <label for="r-montant">Montant</label>
+          <input type="number" id="r-montant" inputmode="decimal" step="0.01" placeholder="0.00">
+        </div>
+        <div class="etroit">
+          <label>Devise</label>
+          <div class="bascule" id="r-devise">
+            <button type="button" class="on" data-v="Gourdes">Gdes</button>
+            <button type="button" data-v="USD">USD</button>
+          </div>
+        </div>
+      </div>
+
+      <label for="r-poids">Poids livré (livres)</label>
+      <input type="number" id="r-poids" inputmode="decimal" step="0.01" placeholder="0">
+
+      <label for="r-client">Client</label>
+      <input type="text" id="r-client" placeholder="Nom du client">
+
+      <div class="apercu" id="r-apercu">Saisissez un montant pour voir la conversion.</div>
+
+      <button class="principal" id="r-envoyer">Enregistrer le revenu</button>
+    </div>
+  </section>
+
+  <!-- ============ CONTRIBUTION ============ -->
+  <section id="v-contrib">
+    <h2>Contribution d'un associé</h2>
+    <div class="msg" id="msg-ctr"></div>
+    <div class="carte">
+      <label for="c-date">Date</label>
+      <input type="date" id="c-date">
+
+      <label for="c-associe">Associé</label>
+      <select id="c-associe"></select>
+
+      <label for="c-type">Type</label>
+      <select id="c-type">
+        <option>Apport Cash</option>
+        <option>Apport Initial</option>
+        <option>Regularisation</option>
+        <option>Retrait</option>
+      </select>
+
+      <div class="paire">
+        <div>
+          <label for="c-montant">Montant</label>
+          <input type="number" id="c-montant" inputmode="decimal" step="0.01" placeholder="0.00">
+        </div>
+        <div class="etroit">
+          <label>Devise</label>
+          <div class="bascule" id="c-devise">
+            <button type="button" class="on" data-v="Gourdes">Gdes</button>
+            <button type="button" data-v="USD">USD</button>
+          </div>
+        </div>
+      </div>
+
+      <label for="c-mode">Mode de paiement</label>
+      <select id="c-mode">
+        <option>Natcash</option><option>MonCash</option>
+        <option>Especes</option><option>Virement</option><option>Autre</option>
+      </select>
+
+      <label for="c-ref">Référence</label>
+      <input type="text" id="c-ref" placeholder="N° de transaction">
+
+      <div class="apercu" id="c-apercu">Saisissez un montant pour voir la conversion.</div>
+
+      <button class="principal" id="c-envoyer">Enregistrer la contribution</button>
+    </div>
+  </section>
+
+  <!-- ============ SOLDES ============ -->
+  <section id="v-soldes">
+    <h2>Soldes des associés</h2>
+    <div class="carte" id="liste-soldes">
+      <div class="vide">Chargement…</div>
+    </div>
+    <button class="principal" id="s-rafraichir">Actualiser</button>
+  </section>
+
+  <!-- ============ RAPPORTS ============ -->
+  <section id="v-rapport">
+    <h2>Rapports</h2>
+    <div class="periodes" id="periodes">
+      <button class="on" data-p="journalier">Jour</button>
+      <button data-p="hebdomadaire">Semaine</button>
+      <button data-p="mensuel">Mois</button>
+      <button data-p="trimestriel">Trimestre</button>
+      <button data-p="semestriel">Semestre</button>
+      <button data-p="annuel">Année</button>
+    </div>
+    <div id="rapport-zone"><div class="vide">Choisissez une période.</div></div>
+  </section>
+</main>
+
+<nav>
+  <button class="on" data-v="v-depense"><span class="ic">−</span>Dépense</button>
+  <button data-v="v-revenu"><span class="ic">+</span>Revenu</button>
+  <button data-v="v-contrib"><span class="ic">◆</span>Apport</button>
+  <button data-v="v-soldes"><span class="ic">≡</span>Soldes</button>
+  <button data-v="v-rapport"><span class="ic">▤</span>Rapports</button>
+</nav>
+
+<script src="app.js"></script>
+</body>
+</html>
