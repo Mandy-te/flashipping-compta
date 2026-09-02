@@ -5,7 +5,7 @@
    ========================================================================= */
 
 /* -------- A CONFIGURER ------------------------------------------------- */
-const API_URL = 'https://script.google.com/macros/s/AKfycbyA8oEoUQB_C9K67Wl6jFZp6Fe8KOT6W20k8VtGJzU41dCr2behwJpWGIOZGU5P3tInvg/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzX3ajj6Zzm1wJHGG7bAvmLoJG5v2i4M_2Z3_54jrQEuksSuovE_28BjNVi8-JcXxdoUA/exec';
 // Doit etre IDENTIQUE au TOKEN en haut de Code.gs
 const TOKEN   = 'FLASHIPPING@2026';
 /* ----------------------------------------------------------------------- */
