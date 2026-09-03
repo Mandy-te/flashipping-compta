@@ -5,9 +5,9 @@
    ========================================================================= */
 
 /* -------- A CONFIGURER ------------------------------------------------- */
-const API_URL = 'https://script.google.com/macros/s/AKfycbxBwPs6y-sLh2SEUrhN3qKZ62IJ3OFaIgKUjAor4U4dZxFkvBCa2x1wHsYQbSK7sdEzdA/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyA8oEoUQB_C9K67Wl6jFZp6Fe8KOT6W20k8VtGJzU41dCr2behwJpWGIOZGU5P3tInvg/exec';
 // Doit etre IDENTIQUE au TOKEN en haut de Code.gs
-const TOKEN   = 'FLASHIPPING@2026';
+const TOKEN   = 'FLASH-2026-CHANGEME';
 /* ----------------------------------------------------------------------- */
 
 const OBJETS_DEPENSE = {
@@ -281,6 +281,7 @@ async function soumettre(type, payload, msgId, apresSucces, btn) {
   };
 
   const succes = (texte) => {
+    histoDonnees = [];          // force le rechargement de l'historique
     afficher(msgId, 'ok', texte);
     apresSucces();
     if (btn) flashCarte(btn);
@@ -412,6 +413,114 @@ async function chargerSoldes() {
   }
 }
 
+
+/* ============================= Historique =============================== */
+
+let histoType = 'depense';
+let histoDonnees = [];
+
+function rendreHistorique() {
+  const zone = document.getElementById('histo-liste');
+  const resume = document.getElementById('histo-resume');
+  const q = (document.getElementById('histo-recherche').value || '')
+    .toLowerCase().trim();
+
+  let lignes = histoDonnees;
+  if (q) {
+    lignes = lignes.filter(l =>
+      (l.titre || '').toLowerCase().includes(q) ||
+      (l.detail || '').toLowerCase().includes(q) ||
+      (l.lieu || '').toLowerCase().includes(q) ||
+      (l.id || '').toLowerCase().includes(q) ||
+      (l.date || '').includes(q));
+  }
+
+  const total = lignes.reduce((s, l) => s + (l.montant_gdes || 0), 0);
+  const mot = histoType === 'depense' ? 'depense'
+            : histoType === 'revenu' ? 'revenu' : 'apport';
+  resume.textContent = lignes.length + ' ' + mot + (lignes.length > 1 ? 's' : '')
+    + '  ·  ' + gdes(total);
+
+  if (!lignes.length) {
+    zone.innerHTML = '<div class="vide">' +
+      (q ? 'Aucun resultat pour cette recherche.' : 'Aucune ecriture enregistree.') +
+      '</div>';
+    return;
+  }
+
+  // regroupement par jour
+  let html = '';
+  let jourCourant = null;
+  lignes.forEach(l => {
+    if (l.date !== jourCourant) {
+      jourCourant = l.date;
+      html += `<div class="jour">${dateLisible(l.date)}</div>`;
+    }
+
+    const negatif = histoType === 'depense' || l.retrait;
+    const signe = negatif ? '-' : '+';
+    const couleur = negatif ? 'neg' : 'pos';
+
+    let puces = '';
+    if (l.urgente) puces += '<span class="puce attente">a regulariser</span> ';
+    if (l.statut && l.statut !== 'Valide' && l.statut !== 'Encaisse'
+        && l.statut !== 'Confirme' && !l.urgente) {
+      puces += `<span class="puce">${l.statut}</span> `;
+    }
+    if (l.poids) puces += `<span class="puce">${l.poids} lb</span> `;
+
+    const bas = [l.detail, l.lieu].filter(Boolean).join(' · ');
+
+    html += `<div class="ligne">
+      <div class="g">
+        <div class="nom">${l.titre || ''}</div>
+        ${bas ? `<div class="meta">${bas}</div>` : ''}
+        <div class="meta"><span class="ref">${l.id}</span>
+          ${l.devise === 'USD' ? ' · saisi en USD' : ''}</div>
+        ${puces ? `<div style="margin-top:5px">${puces}</div>` : ''}
+      </div>
+      <div class="val ${couleur}">${signe} ${gdes(l.montant_gdes)}</div>
+    </div>`;
+  });
+
+  zone.innerHTML = html;
+}
+
+function dateLisible(iso) {
+  const jours = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+  const mois = ['janvier','fevrier','mars','avril','mai','juin',
+                'juillet','aout','septembre','octobre','novembre','decembre'];
+  const d = new Date(iso + 'T12:00:00');
+  if (isNaN(d.getTime())) return iso;
+  const auj = aujourdhui();
+  if (iso === auj) return "Aujourd'hui";
+  return jours[d.getDay()] + ' ' + d.getDate() + ' ' + mois[d.getMonth()];
+}
+
+async function chargerHistorique(type) {
+  histoType = type || histoType;
+  const zone = document.getElementById('histo-liste');
+  zone.innerHTML = '<div class="vide">Chargement…</div>';
+
+  let r = null;
+  try {
+    r = await api({ action: 'historique', type: histoType, limite: 200 });
+    if (r && r.ok) await cacheEcrire('histo-' + histoType, r);
+  } catch (e) {
+    r = await cacheLire('histo-' + histoType);
+  }
+
+  if (!r || !r.ok) {
+    zone.innerHTML = '<div class="vide">Hors ligne, et cet historique '
+      + "n'a pas encore ete consulte. Reconnectez-vous une fois pour le garder.</div>";
+    document.getElementById('histo-resume').textContent = '—';
+    return;
+  }
+
+  histoDonnees = r.lignes || [];
+  rendreHistorique();
+}
+
 /* ============================== Rapports ================================ */
 
 async function chargerRapport(type) {
@@ -508,6 +617,7 @@ function brancherUI() {
       if (vue) vue.classList.add('actif');
       window.scrollTo(0, 0);
       if (b.dataset.v === 'v-soldes') chargerSoldes();
+      if (b.dataset.v === 'v-histo' && !histoDonnees.length) chargerHistorique();
     });
   });
 
@@ -616,6 +726,29 @@ function brancherUI() {
     b.classList.add('charge'); b.disabled = true;
     vibrer(12);
     try { await chargerSoldes(); }
+    finally { b.classList.remove('charge'); b.disabled = false; }
+  });
+
+  // historique : onglets Depenses / Revenus / Apports
+  document.querySelectorAll('#histo-onglets button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('#histo-onglets button')
+        .forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      document.getElementById('histo-recherche').value = '';
+      vibrer(10);
+      chargerHistorique(b.dataset.t);
+    });
+  });
+
+  document.getElementById('histo-recherche')
+    .addEventListener('input', rendreHistorique);
+
+  document.getElementById('histo-actualiser').addEventListener('click', async (ev) => {
+    const b = ev.currentTarget;
+    b.classList.add('charge'); b.disabled = true;
+    vibrer(12);
+    try { await chargerHistorique(); }
     finally { b.classList.remove('charge'); b.disabled = false; }
   });
 
