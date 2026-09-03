@@ -182,13 +182,25 @@ nav{
   padding-bottom:env(safe-area-inset-bottom);
 }
 nav button{
-  flex:1;padding:11px 4px 13px;border:0;background:none;
-  color:var(--gris);font-size:11px;font-weight:600;cursor:pointer;
+  flex:1;padding:11px 2px 13px;border:0;background:none;
+  color:var(--gris);font-size:10px;font-weight:600;cursor:pointer;
+  line-height:1.2;
 }
 nav button .ic{display:block;font-size:19px;margin-bottom:2px}
 nav button.on{color:var(--encre)}
 
 .vide{text-align:center;padding:28px 16px;color:var(--gris);font-size:14px}
+
+/* ---------- historique ---------- */
+.jour{
+  font-size:12px;font-weight:700;color:var(--gris);
+  text-transform:uppercase;letter-spacing:.04em;
+  padding:14px 0 6px;border-bottom:1px solid var(--trait);
+}
+.jour:first-child{padding-top:2px}
+.ligne .date{font-size:12px;color:var(--gris);font-variant-numeric:tabular-nums}
+.ligne .ref{font-size:11px;color:var(--trait)}
+nav button .ic{display:block;font-size:19px;margin-bottom:2px}
 @media (prefers-reduced-motion:reduce){
   *{transition:none!important}
   .carte.valide{animation:none!important}
@@ -361,6 +373,24 @@ nav button.on{color:var(--encre)}
     <button class="principal" id="s-rafraichir">Actualiser</button>
   </section>
 
+  <!-- ============ HISTORIQUE ============ -->
+  <section id="v-histo">
+    <h2>Historique</h2>
+    <div class="periodes" id="histo-onglets">
+      <button class="on" data-t="depense">Dépenses</button>
+      <button data-t="revenu">Revenus</button>
+      <button data-t="contribution">Apports</button>
+    </div>
+    <input type="search" id="histo-recherche" placeholder="Rechercher…"
+           style="margin-bottom:12px">
+    <div id="histo-resume" class="apercu" style="margin-bottom:12px">—</div>
+    <div class="carte" id="histo-liste">
+      <div class="vide">Chargement…</div>
+    </div>
+    <button class="principal" id="histo-actualiser"
+            style="margin-bottom:24px">Actualiser</button>
+  </section>
+
   <!-- ============ RAPPORTS ============ -->
   <section id="v-rapport">
     <h2>Rapports</h2>
@@ -381,6 +411,7 @@ nav button.on{color:var(--encre)}
   <button data-v="v-revenu"><span class="ic">+</span>Revenu</button>
   <button data-v="v-contrib"><span class="ic">◆</span>Apport</button>
   <button data-v="v-soldes"><span class="ic">≡</span>Soldes</button>
+  <button data-v="v-histo"><span class="ic">↺</span>Historique</button>
   <button data-v="v-rapport"><span class="ic">▤</span>Rapports</button>
 </nav>
 
