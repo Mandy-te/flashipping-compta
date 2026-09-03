@@ -7,7 +7,7 @@
 /* -------- A CONFIGURER ------------------------------------------------- */
 const API_URL = 'https://script.google.com/macros/s/AKfycbyA8oEoUQB_C9K67Wl6jFZp6Fe8KOT6W20k8VtGJzU41dCr2behwJpWGIOZGU5P3tInvg/exec';
 // Doit etre IDENTIQUE au TOKEN en haut de Code.gs
-const TOKEN   = 'FLASH-2026-CHANGEME';
+const TOKEN   = 'FLASHIPPING@2026;
 /* ----------------------------------------------------------------------- */
 
 const OBJETS_DEPENSE = {
