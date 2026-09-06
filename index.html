@@ -267,8 +267,10 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
       <span>Rester connecté sur ce téléphone</span>
     </label>
 
-    <button class="principal" id="cx-entrer">Entrer</button>
-    <p class="cx-note">Ce code identifie vos saisies. Ne le partagez pas.</p>
+    <button class="principal" id="cx-entrer" type="button"
+            onclick="seConnecter(this)">Entrer</button>
+    <p class="cx-note">Ce code identifie vos saisies. Ne le partagez pas.<br>
+      <span id="cx-version" style="opacity:.6">version 6</span></p>
   </div>
 </div>
 
@@ -489,7 +491,7 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
    ========================================================================= */
 
 /* -------- A CONFIGURER ------------------------------------------------- */
-const API_URL = https://script.google.com/macros/s/AKfycbzNuGnTf4saAoYUdTlgW1xONDHYNCcobB8S4xTKJRZ6ed5rsr6xfwoz29T53ttHellYBA/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzNuGnTf4saAoYUdTlgW1xONDHYNCcobB8S4xTKJRZ6ed5rsr6xfwoz29T53ttHellYBA/exec';
 let CODE = '';          // code agent, saisi a la connexion
 let MOI  = null;        // { nom, role, agence_id }
 /* ----------------------------------------------------------------------- */
@@ -1213,6 +1215,33 @@ function deconnecter() {
   afficherEcranConnexion(true);
 }
 
+/* -------- Bouton Entrer : fonction globale, appelee par onclick --------
+   Volontairement independante du demarrage : meme si une autre partie
+   de l'app echoue, la connexion reste possible.                        */
+async function seConnecter(btn) {
+  var msg = document.getElementById('cx-msg');
+  try {
+    if (btn) { btn.classList.add('charge'); btn.disabled = true; }
+
+    // la base locale peut ne pas etre prete si le demarrage a echoue
+    if (!db) { try { await ouvrirDB(); } catch (e) { db = null; } }
+
+    var champ = document.getElementById('cx-code');
+    var garder = (document.getElementById('cx-garder') || {}).checked !== false;
+    var ok = await connecter(champ ? champ.value : '', garder);
+    if (ok) await chargerApresConnexion();
+
+  } catch (e) {
+    if (msg) {
+      msg.className = 'msg err';
+      msg.textContent = 'Erreur : ' + (e && e.message ? e.message : e);
+    }
+  } finally {
+    if (btn) { btn.classList.remove('charge'); btn.disabled = false; }
+  }
+}
+window.seConnecter = seConnecter;
+
 /* ============================ Initialisation ============================ */
 
 /* --- Branchement de l'interface : SYNCHRONE, aucune dependance reseau/DB --- */
@@ -1389,23 +1418,13 @@ async function init() {
   setInterval(() => { if (CODE) synchroniser().catch(() => {}); }, 60000);
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js?v=5').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=6').catch(() => {});
   }
 }
 
 /* ---- connexion : cablage et reprise de session ---- */
 async function demarrerSession() {
-  on('cx-entrer', 'click', async (ev) => {
-    const b = ev.currentTarget;
-    b.classList.add('charge'); b.disabled = true;
-    try {
-      const garder = (document.getElementById('cx-garder') || {}).checked !== false;
-      const ok = await connecter(valeur('cx-code'), garder);
-      if (ok) await chargerApresConnexion();
-    } finally {
-      b.classList.remove('charge'); b.disabled = false;
-    }
-  });
+  // le bouton Entrer est branche par onclick dans le HTML
 
   on('cx-code', 'keydown', (e) => {
     if (e.key === 'Enter') {
