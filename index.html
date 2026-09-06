@@ -228,6 +228,55 @@ nav button.on{color:var(--encre)}
 
 .vide{text-align:center;padding:28px 16px;color:var(--gris);font-size:14px}
 
+/* ---------- regularisation ---------- */
+.regul{
+  background:#FBEEDA;border:1px solid #E8C98A;border-radius:var(--r);
+  padding:13px 14px;margin-bottom:12px;
+}
+.regul h3{margin:0 0 4px;font-size:15px;font-weight:700;color:#8A5D12}
+.regul p{margin:0 0 10px;font-size:13px;color:#6E5320;line-height:1.4}
+.regul .total{font-weight:700;font-variant-numeric:tabular-nums}
+.btn-regul{
+  width:100%;padding:12px;border:0;border-radius:8px;
+  background:#8A5D12;color:#fff;font-weight:700;font-size:14px;cursor:pointer;
+  transition:transform .06s ease;position:relative;
+}
+.btn-regul:active{transform:scale(.97)}
+.btn-regul:disabled{opacity:.5;cursor:not-allowed}
+.btn-regul.charge{color:transparent;pointer-events:none}
+.btn-regul.charge::after{
+  content:"";position:absolute;top:50%;left:50%;
+  width:18px;height:18px;margin:-9px 0 0 -9px;
+  border:2.5px solid rgba(255,255,255,.35);
+  border-top-color:#fff;border-radius:50%;
+  animation:tourne .65s linear infinite;
+}
+.regul .bloque{
+  background:#F8E6E4;border:1px solid #E8C4C0;color:var(--rouge);
+  padding:10px 12px;border-radius:8px;font-size:13px;line-height:1.4;
+}
+
+/* ---------- annulation / cloture ---------- */
+.mini-annuler{
+  margin-top:7px;padding:5px 12px;border:1px solid var(--trait);
+  background:#fff;border-radius:20px;font-size:12px;font-weight:600;
+  color:var(--rouge);cursor:pointer;
+}
+.mini-annuler:active{transform:scale(.95)}
+.ligne.barree .nom,
+.ligne.barree .val{text-decoration:line-through;opacity:.55}
+
+.cloture-bloc{
+  background:var(--carte);border:1px solid var(--trait);
+  border-radius:var(--r);padding:14px;margin-bottom:12px;
+}
+.cloture-bloc h3{margin:0 0 8px;font-size:15px;font-weight:700}
+.alerte-taux{
+  background:#FBEEDA;border:1px solid #E8C98A;color:#8A5D12;
+  padding:11px 13px;border-radius:8px;font-size:13px;
+  margin-bottom:12px;line-height:1.4;
+}
+
 /* ---------- historique ---------- */
 .jour{
   font-size:12px;font-weight:700;color:var(--gris);
@@ -270,7 +319,7 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
     <button class="principal" id="cx-entrer" type="button"
             onclick="seConnecter(this)">Entrer</button>
     <p class="cx-note">Ce code identifie vos saisies. Ne le partagez pas.<br>
-      <span id="cx-version" style="opacity:.6">version 6</span></p>
+      <span id="cx-version" style="opacity:.6">version 9</span></p>
   </div>
 </div>
 
@@ -377,6 +426,10 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
       <label for="r-client">Client</label>
       <input type="text" id="r-client" placeholder="Nom du client">
 
+      <label for="r-desc">Explication</label>
+      <input type="text" id="r-desc"
+             placeholder="Ex : 6 colis livrés, lot du 24 août">
+
       <div class="apercu" id="r-apercu">Saisissez un montant pour voir la conversion.</div>
 
       <button class="principal" id="r-envoyer">Enregistrer le revenu</button>
@@ -451,6 +504,7 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
     </div>
     <input type="search" id="histo-recherche" placeholder="Rechercher…"
            style="margin-bottom:12px">
+    <div id="histo-regul"></div>
     <div id="histo-resume" class="apercu" style="margin-bottom:12px">—</div>
     <div class="carte" id="histo-liste">
       <div class="vide">Chargement…</div>
@@ -471,6 +525,8 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
       <button data-p="annuel">Année</button>
     </div>
     <div id="rapport-zone"><div class="vide">Choisissez une période.</div></div>
+
+    <div id="zone-cloture" style="margin-top:26px"></div>
   </section>
 </main>
 
@@ -699,11 +755,15 @@ async function synchroniser() {
         if (r.resultat && r.resultat.ok) {
           await fileSupprimer(r.local_id);
         } else if (r.resultat && r.resultat.code === 'SOLDE_INSUFFISANT') {
-          // on garde en file et on previent
-          afficher('msg-dep', 'err',
-            'Une dépense en attente a été refusée : ' + r.resultat.message);
-          await fileSupprimer(r.local_id);
+          // On NE supprime PAS : la saisie reste en attente et repartira
+          // toute seule apres un apport. L'agent n'a rien a retaper.
+          erreurGlobale('Saisie en attente refusee : ' + r.resultat.message
+            + '\nElle est conservee et sera renvoyee apres un apport.');
         } else {
+          // refus definitif (donnee invalide) : on retire, sinon la file
+          // resterait bloquee indefiniment sur cette ligne
+          erreurGlobale('Saisie abandonnee : '
+            + ((r.resultat && r.resultat.message) || 'erreur inconnue'));
           await fileSupprimer(r.local_id);
         }
       }
@@ -994,13 +1054,22 @@ function rendreHistorique() {
 
     const bas = [l.detail, l.lieu].filter(Boolean).join(' · ');
 
-    html += `<div class="ligne">
+    const annule = String(l.statut || '').trim() === 'Annule';
+    if (annule) puces = '<span class="puce">annulee</span> ' + puces;
+
+    const boutonAnnuler = (MOI && MOI.role === 'Admin' && !annule)
+      ? `<button class="mini-annuler"
+           onclick="annulerEcriture('${histoType}','${l.id}')">Annuler</button>`
+      : '';
+
+    html += `<div class="ligne${annule ? ' barree' : ''}">
       <div class="g">
         <div class="nom">${l.titre || ''}</div>
         ${bas ? `<div class="meta">${bas}</div>` : ''}
         <div class="meta"><span class="ref">${l.id}</span>
           ${l.devise === 'USD' ? ' · saisi en USD' : ''}</div>
         ${puces ? `<div style="margin-top:5px">${puces}</div>` : ''}
+        ${boutonAnnuler}
       </div>
       <div class="val ${couleur}">${signe} ${gdes(l.montant_gdes)}</div>
     </div>`;
@@ -1042,7 +1111,226 @@ async function chargerHistorique(type) {
 
   histoDonnees = r.lignes || [];
   rendreHistorique();
+  chargerRegularisation();
 }
+
+
+/* ========================= Regularisation ============================== */
+
+let regulInfo = null;
+
+async function chargerRegularisation() {
+  const zone = document.getElementById('histo-regul');
+  if (!zone) return;
+
+  // reserve aux administrateurs, et seulement sur l'onglet Depenses
+  if (!MOI || MOI.role !== 'Admin' || histoType !== 'depense') {
+    zone.innerHTML = '';
+    return;
+  }
+
+  try {
+    regulInfo = await api({ action: 'a_regulariser' });
+  } catch (e) {
+    zone.innerHTML = '';
+    return;
+  }
+  if (!regulInfo || !regulInfo.ok || !regulInfo.lignes.length) {
+    zone.innerHTML = '';
+    return;
+  }
+
+  const n = regulInfo.lignes.length;
+
+  let action;
+  if (regulInfo.regularisable) {
+    action = `<button class="btn-regul" id="btn-regul-tout"
+                onclick="regulariserTout(this)">
+                Regulariser ${n === 1 ? 'cette depense' : `ces ${n} depenses`}
+              </button>`;
+  } else {
+    action = `<div class="bloque">
+      Caisse a ${gdes(regulInfo.solde_entreprise_gdes)}.
+      Enregistrez d'abord les apports qui couvrent le decouvert :
+      regulariser sans remettre l'argent reviendrait a effacer la dette
+      sans l'avoir payee.
+    </div>`;
+  }
+
+  zone.innerHTML = `<div class="regul">
+    <h3>${n} depense${n > 1 ? 's' : ''} a regulariser</h3>
+    <p>Argent sorti alors que la caisse ne le couvrait pas.
+       Total : <span class="total">${gdes(regulInfo.total_gdes)}</span></p>
+    ${action}
+  </div>`;
+}
+
+async function regulariserTout(btn) {
+  if (!regulInfo || !regulInfo.lignes.length) return;
+
+  const n = regulInfo.lignes.length;
+  if (!confirm('Regulariser ' + n + ' depense' + (n > 1 ? 's' : '')
+      + ' pour ' + gdes(regulInfo.total_gdes) + ' ?\n\n'
+      + 'Le drapeau sera leve et la note datee a votre nom.')) return;
+
+  btn.classList.add('charge');
+  btn.disabled = true;
+
+  let faits = 0, echecs = [];
+  for (const l of regulInfo.lignes) {
+    try {
+      const r = await api({ action: 'regulariser', id: l.id });
+      if (r && r.ok) faits++;
+      else echecs.push(l.id + ' : ' + ((r && r.message) || 'echec'));
+    } catch (e) {
+      echecs.push(l.id + ' : reseau');
+    }
+  }
+
+  btn.classList.remove('charge');
+  btn.disabled = false;
+  vibrer([18, 60, 18]);
+
+  histoDonnees = [];
+  await chargerHistorique();
+  await chargerSoldes();
+
+  if (echecs.length) {
+    erreurGlobale(faits + ' regularisee(s), ' + echecs.length
+      + ' en echec :\n' + echecs.join('\n'));
+  }
+}
+window.regulariserTout = regulariserTout;
+
+
+/* ======================== Annulation d'ecriture ========================= */
+
+async function annulerEcriture(type, id) {
+  const noms = { depense: 'cette depense', revenu: 'ce revenu',
+                 contribution: 'cet apport' };
+  const motif = prompt('Annuler ' + (noms[type] || 'cette ecriture') + ' (' + id + ') ?\n\n'
+    + "La ligne restera visible et barree, avec la trace de l'annulation.\n"
+    + 'Motif (facultatif) :');
+  if (motif === null) return;   // annule par l'utilisateur
+
+  try {
+    const r = await api({ action: 'annuler', type_ecriture: type,
+                          id: id, motif: motif });
+    if (r && r.ok) {
+      vibrer([18, 60, 18]);
+      histoDonnees = [];
+      await chargerHistorique();
+      await chargerSoldes();
+    } else {
+      erreurGlobale((r && r.message) || 'Annulation refusee.');
+    }
+  } catch (e) {
+    erreurGlobale('Annulation impossible hors ligne.');
+  }
+}
+window.annulerEcriture = annulerEcriture;
+
+/* ============================== Cloture ================================= */
+
+function moisPrecedent() {
+  const d = new Date();
+  const debut = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+  const fin   = new Date(d.getFullYear(), d.getMonth(), 0);
+  const f = (x) => x.getFullYear() + '-'
+    + String(x.getMonth() + 1).padStart(2, '0') + '-'
+    + String(x.getDate()).padStart(2, '0');
+  return { debut: f(debut), fin: f(fin) };
+}
+
+async function chargerCloture() {
+  const zone = document.getElementById('zone-cloture');
+  if (!zone) return;
+  if (!MOI || MOI.role !== 'Admin') { zone.innerHTML = ''; return; }
+
+  const p = moisPrecedent();
+  let prep = null, taux = null;
+
+  try {
+    prep = await api({ action: 'preparer_cloture', debut: p.debut, fin: p.fin });
+    taux = await api({ action: 'etat_taux' });
+  } catch (e) {
+    zone.innerHTML = '';
+    return;
+  }
+  if (!prep || !prep.ok) { zone.innerHTML = ''; return; }
+
+  let html = '<h2>Cloture mensuelle</h2>';
+
+  if (taux && taux.ok && taux.perime) {
+    html += `<div class="alerte-taux">
+      Le taux de change date du ${taux.date_effet}, soit ${taux.jours} jours.
+      Mettez a jour l'onglet Parametres avant de cloturer, sinon les
+      montants en USD seront fausses.
+    </div>`;
+  }
+
+  if (prep.deja_cloture) {
+    html += `<div class="cloture-bloc">
+      <h3>${p.debut} au ${p.fin}</h3>
+      <p style="margin:0;font-size:13px;color:var(--gris)">
+        Periode deja cloturee. Rien a faire.</p>
+    </div>`;
+    zone.innerHTML = html;
+    return;
+  }
+
+  html += `<div class="cloture-bloc">
+    <h3>Periode du ${p.debut} au ${p.fin}</h3>
+    <div class="ligne"><div class="g"><div class="nom">Revenus</div></div>
+      <div class="val pos">${gdes(prep.total_revenus_gdes)}</div></div>
+    <div class="ligne"><div class="g"><div class="nom">Depenses</div></div>
+      <div class="val neg">${gdes(prep.total_depenses_gdes)}</div></div>
+    <div class="ligne"><div class="g"><div class="nom">Profit</div></div>
+      <div class="val ${prep.profit_gdes >= 0 ? 'pos' : 'neg'}">
+        ${gdes(prep.profit_gdes)}</div></div>
+  </div>`;
+
+  html += `<div class="cloture-bloc"><h3>Soldes qui seront figes</h3>` +
+    prep.lignes.map(l => `<div class="ligne">
+      <div class="g"><div class="nom">${l.nom}</div>
+        <div class="meta">Financement ${(l.part_effective * 100).toFixed(1)}%
+          &middot; profit ${gdes(l.profit)}</div></div>
+      <div class="val ${l.solde_cloture < 0 ? 'neg' : ''}">
+        ${gdes(l.solde_cloture)}</div>
+    </div>`).join('') + `</div>`;
+
+  html += `<button class="principal" id="btn-cloturer"
+    onclick="lancerCloture(this, '${p.debut}', '${p.fin}')"
+    style="margin-bottom:24px">Cloturer definitivement ce mois</button>`;
+
+  zone.innerHTML = html;
+}
+
+async function lancerCloture(btn, debut, fin) {
+  if (!confirm('Cloturer la periode du ' + debut + ' au ' + fin + ' ?\n\n'
+    + 'Les soldes seront figes et ne pourront plus etre modifies.\n'
+    + "C'est ce qui garde l'application rapide dans la duree.")) return;
+
+  btn.classList.add('charge');
+  btn.disabled = true;
+  try {
+    const r = await api({ action: 'cloturer', type_periode: 'Mensuel',
+                          debut: debut, fin: fin });
+    if (r && r.ok) {
+      vibrer([18, 60, 18]);
+      await chargerSoldes();
+      await chargerCloture();
+    } else {
+      erreurGlobale((r && r.message) || 'Cloture refusee.');
+    }
+  } catch (e) {
+    erreurGlobale('Cloture impossible : ' + (e.message || e));
+  } finally {
+    btn.classList.remove('charge');
+    btn.disabled = false;
+  }
+}
+window.lancerCloture = lancerCloture;
 
 /* ============================== Rapports ================================ */
 
@@ -1262,6 +1550,7 @@ function brancherUI() {
       window.scrollTo(0, 0);
       if (b.dataset.v === 'v-soldes') chargerSoldes();
       if (b.dataset.v === 'v-histo' && !histoDonnees.length) chargerHistorique();
+      if (b.dataset.v === 'v-rapport') chargerCloture();
     });
   });
 
@@ -1318,6 +1607,7 @@ function brancherUI() {
         source: document.getElementById('r-source').value,
         agence_id: document.getElementById('r-agence').value,
         client: document.getElementById('r-client').value,
+        description: document.getElementById('r-desc').value,
         montant_saisi: montant,
         devise_saisie: deviseActive('r-devise'),
         poids_livre: parseFloat(document.getElementById('r-poids').value) || 0,
@@ -1326,6 +1616,7 @@ function brancherUI() {
         document.getElementById('r-montant').value = '';
         document.getElementById('r-poids').value = '';
         document.getElementById('r-client').value = '';
+        document.getElementById('r-desc').value = '';
         document.getElementById('r-apercu').textContent =
           'Saisissez un montant pour voir la conversion.';
       }, btn);
@@ -1398,6 +1689,7 @@ function brancherUI() {
       document.querySelectorAll('#periodes button').forEach(x => x.classList.remove('on'));
       b.classList.add('on');
       chargerRapport(b.dataset.p);
+      chargerCloture();
     });
   });
 
@@ -1418,7 +1710,7 @@ async function init() {
   setInterval(() => { if (CODE) synchroniser().catch(() => {}); }, 60000);
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js?v=6').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=9').catch(() => {});
   }
 }
 
