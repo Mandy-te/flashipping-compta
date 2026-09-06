@@ -2,7 +2,7 @@
    FLASHIPPING - Logique PWA
    Fonctionne hors ligne : les saisies sont mises en file dans IndexedDB
    puis envoyees automatiquement des que le reseau revient.
-   ========================================================================= */
+   ========================================================================= 
 
 /* -------- A CONFIGURER ------------------------------------------------- */
 const API_URL = 'https://script.google.com/macros/library/d/1nyn0E9cDpuER_sTDlzti10N-1TNLrj52TV80mylCeBce0pw_it8lEcD7/11';
@@ -788,4 +788,4 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
   init();
-}
+} */
