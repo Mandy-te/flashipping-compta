@@ -256,6 +256,30 @@ nav button.on{color:var(--encre)}
   padding:10px 12px;border-radius:8px;font-size:13px;line-height:1.4;
 }
 
+/* ---------- equilibrage des parts ---------- */
+.eq-bloc{
+  background:var(--carte);border:1px solid var(--trait);
+  border-radius:var(--r);padding:14px;margin-bottom:12px;
+}
+.eq-bloc h3{margin:0 0 6px;font-size:15px;font-weight:700}
+.eq-bloc .expl{
+  font-size:13px;color:var(--gris);line-height:1.45;margin:0 0 12px;
+}
+.eq-transfert{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:11px 0;border-bottom:1px solid var(--trait);gap:10px;
+}
+.eq-transfert:last-child{border-bottom:0}
+.eq-transfert .qui{
+  display:block;margin:0;font-size:14px;color:var(--encre);
+}
+.eq-transfert .fleche{color:var(--gris);font-size:12px}
+.eq-transfert .m{
+  font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.puce.acheter{background:#FBEEDA;color:#8A5D12}
+.puce.vendre{background:#E4F0EA;color:var(--vert)}
+
 /* ---------- annulation / cloture ---------- */
 .mini-annuler{
   margin-top:7px;padding:5px 12px;border:1px solid var(--trait);
@@ -319,7 +343,7 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
     <button class="principal" id="cx-entrer" type="button"
             onclick="seConnecter(this)">Entrer</button>
     <p class="cx-note">Ce code identifie vos saisies. Ne le partagez pas.<br>
-      <span id="cx-version" style="opacity:.6">version 9</span></p>
+      <span id="cx-version" style="opacity:.6">version 12</span></p>
   </div>
 </div>
 
@@ -355,7 +379,7 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
       <label for="d-objet">Objet de la dépense</label>
       <select id="d-objet"></select>
 
-      <label for="d-agence">Agence</label>
+      <label for="d-agence">Agence <span style="color:var(--rouge)">*</span></label>
       <select id="d-agence"></select>
 
       <div class="paire">
@@ -403,7 +427,7 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
         <option>Autre Revenu</option>
       </select>
 
-      <label for="r-agence">Agence</label>
+      <label for="r-agence">Agence <span style="color:var(--rouge)">*</span></label>
       <select id="r-agence"></select>
 
       <div class="paire">
@@ -453,6 +477,10 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
         <option>Apport Initial</option>
         <option>Regularisation</option>
         <option>Retrait</option>
+        <option>Rachat de parts</option>
+        <option>Cession de parts</option>
+        <option>Rachat de parts</option>
+        <option>Cession de parts</option>
       </select>
 
       <div class="paire">
@@ -492,6 +520,8 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
       <div class="vide">Chargement…</div>
     </div>
     <button class="principal" id="s-rafraichir">Actualiser</button>
+
+    <div id="zone-equilibrage" style="margin-top:26px"></div>
   </section>
 
   <!-- ============ HISTORIQUE ============ -->
@@ -813,6 +843,13 @@ function brancherBascule(id, onChange) {
   });
 }
 
+function nomAgence(id) {
+  var a = (etat.agences || []).filter(function (x) {
+    return String(x.agence_id).trim() === String(id).trim();
+  });
+  return a.length ? a[0].nom_agence : id;
+}
+
 function apercuConversion(inputId, deviseId, cibleId) {
   const v = parseFloat(document.getElementById(inputId).value);
   const el = document.getElementById(cibleId);
@@ -823,7 +860,11 @@ function apercuConversion(inputId, deviseId, cibleId) {
   const dev = deviseActive(deviseId);
   const g = dev === 'USD' ? v * etat.taux : v;
   const u = dev === 'USD' ? v : v / etat.taux;
-  el.textContent = gdes(g) + '  ·  ' + usd(u) + '   (taux ' + etat.taux + ')';
+  var champAgence = inputId.charAt(0) + '-agence';
+  var ag = document.getElementById(champAgence);
+  var suffixe = ag ? '\n' + nomAgence(ag.value) : '';
+  el.style.whiteSpace = 'pre-line';
+  el.textContent = gdes(g) + '  ·  ' + usd(u) + '   (taux ' + etat.taux + ')' + suffixe;
 }
 
 function localId() {
@@ -917,10 +958,32 @@ async function chargerReference() {
   etat.agences = ref.agences || [];
 
   // agences
+  // L'agence par defaut est celle de l'agent connecte (onglet Utilisateurs),
+  // sinon la derniere utilisee sur ce telephone. Evite de tout tagger
+  // sur la premiere agence de la liste sans s'en rendre compte.
+  const agenceDefaut = (MOI && MOI.agence_id)
+    || relire('flashipping_derniere_agence')
+    || (etat.agences[0] && etat.agences[0].agence_id) || '';
+
   const optAg = etat.agences.map(a =>
-    `<option value="${a.agence_id}">${a.nom_agence}</option>`).join('');
+    `<option value="${a.agence_id}"${a.agence_id === agenceDefaut ? ' selected' : ''}>`
+    + `${a.nom_agence}</option>`).join('');
   document.getElementById('d-agence').innerHTML = optAg;
   document.getElementById('r-agence').innerHTML = optAg;
+
+  ['d-agence', 'r-agence'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.value = agenceDefaut;
+    el.addEventListener('change', function () {
+      memoriser('flashipping_derniere_agence', el.value);
+      var autre = document.getElementById(id === 'd-agence' ? 'r-agence' : 'd-agence');
+      if (autre) autre.value = el.value;
+      var rappel = document.getElementById(
+        id === 'd-agence' ? 'd-agence-rappel' : 'r-agence-rappel');
+      if (rappel) rappel.textContent = '';
+    });
+  });
 
   // associes
   document.getElementById('c-associe').innerHTML = etat.associes.map(a =>
@@ -996,6 +1059,137 @@ async function chargerSoldes() {
   }
 }
 
+
+/* ========================= Equilibrage des parts ======================== */
+
+let planEq = null;
+
+async function chargerEquilibrage() {
+  const zone = document.getElementById('zone-equilibrage');
+  if (!zone) return;
+  if (!MOI || MOI.role !== 'Admin') { zone.innerHTML = ''; return; }
+
+  try {
+    planEq = await api({ action: 'equilibrage' });
+  } catch (e) { zone.innerHTML = ''; return; }
+  if (!planEq || !planEq.ok) { zone.innerHTML = ''; return; }
+
+  let html = '<h2>Equilibrage des parts</h2>';
+
+  html += `<div class="eq-bloc">
+    <h3>Valeur actuelle de l'entreprise</h3>
+    <div style="font-size:26px;font-weight:700;font-variant-numeric:tabular-nums">
+      ${gdes(planEq.valeur_entreprise_gdes)}</div>
+    <p class="expl" style="margin-top:8px">
+      Une part porte sur cette valeur, profits compris. Elle augmente quand
+      l'entreprise gagne : entrer coute plus cher aujourd'hui qu'hier.
+    </p>
+  </div>`;
+
+  if (planEq.equilibre) {
+    html += `<div class="eq-bloc">
+      <h3>Parts equilibrees</h3>
+      <p class="expl" style="margin:0">
+        Chaque associe detient exactement sa part statutaire. Rien a transferer.</p>
+    </div>`;
+    zone.innerHTML = html;
+    return;
+  }
+
+  html += `<div class="eq-bloc"><h3>Positions</h3>` +
+    planEq.positions.map(p => {
+      let etat;
+      if (p.a_jour) etat = '<span class="puce">a jour</span>';
+      else if (p.doit_acheter > 0)
+        etat = `<span class="puce acheter">doit acheter ${gdes(p.doit_acheter)}</span>`;
+      else
+        etat = `<span class="puce vendre">peut vendre ${gdes(p.peut_vendre)}</span>`;
+      return `<div class="ligne">
+        <div class="g"><div class="nom">${p.nom}</div>
+          <div class="meta">Detient ${gdes(p.detient_gdes)}
+            &middot; cible ${(p.part * 100).toFixed(0)}% = ${gdes(p.cible_gdes)}</div>
+          <div style="margin-top:5px">${etat}</div></div>
+      </div>`;
+    }).join('') + `</div>`;
+
+  html += `<div class="eq-bloc">
+    <h3>Transferts a effectuer</h3>
+    <p class="expl">
+      Cet argent ne rentre pas dans la caisse : il va aux associes qui ont
+      finance au-dela de leur part. La valeur de l'entreprise ne change pas.
+    </p>` +
+    (planEq.cloture_requise
+      ? `<div class="bloque" style="margin-bottom:12px">
+           <strong>Cloturez la periode avant d'enregistrer ces transferts.</strong><br>
+           Tant que le profit n'est pas fige, il continue d'etre reparti selon
+           le financement. Si les parts changent maintenant, ce profit deja
+           gagne serait redistribue retroactivement et les parts finales
+           seraient fausses. Onglet Rapports, en bas : Cloture mensuelle.
+         </div>`
+      : '') +
+    planEq.transferts.map(t => `<div class="eq-transfert">
+      <div>
+        <span class="qui"><strong>${t.acheteur}</strong></span>
+        <span class="fleche">paie a</span>
+        <span class="qui"><strong>${t.vendeur}</strong></span>
+      </div>
+      <div class="m">${gdes(t.montant_gdes)}</div>
+    </div>`).join('') +
+    (planEq.cloture_requise
+      ? `<p class="expl" style="margin:10px 0 0">
+           Enregistrement possible apres la cloture.</p>`
+      : `<button class="principal" onclick="enregistrerTousRachats(this)">
+           Enregistrer ces ${planEq.transferts.length} transferts</button>
+         <p class="expl" style="margin:10px 0 0">
+           A faire seulement une fois l'argent reellement remis.</p>`)
+   + `</div>`;
+
+  zone.innerHTML = html;
+}
+
+async function enregistrerTousRachats(btn) {
+  if (!planEq || !planEq.transferts.length) return;
+
+  if (!confirm('Enregistrer ' + planEq.transferts.length + ' transfert(s) ?\n\n'
+    + 'Total : ' + gdes(planEq.total_a_transferer_gdes) + '\n\n'
+    + "A ne faire qu'une fois l'argent reellement remis de la main a la main.\n"
+    + 'Les parts passeront ensuite a 40/20/20/20.')) return;
+
+  btn.classList.add('charge');
+  btn.disabled = true;
+
+  let faits = 0, echecs = [];
+  for (const t of planEq.transferts) {
+    try {
+      const r = await api({
+        action: 'rachat',
+        acheteur_id: t.acheteur_id,
+        vendeur_id: t.vendeur_id,
+        montant_saisi: t.montant_gdes,
+        devise_saisie: 'Gourdes',
+        mode_paiement: 'Especes'
+      });
+      if (r && r.ok) faits++;
+      else echecs.push(t.acheteur + ' -> ' + t.vendeur + ' : '
+        + ((r && r.message) || 'echec'));
+    } catch (e) {
+      echecs.push(t.acheteur + ' -> ' + t.vendeur + ' : reseau');
+    }
+  }
+
+  btn.classList.remove('charge');
+  btn.disabled = false;
+  vibrer([18, 60, 18]);
+
+  await chargerSoldes();
+  await chargerEquilibrage();
+
+  if (echecs.length) {
+    erreurGlobale(faits + ' transfert(s) enregistres, '
+      + echecs.length + ' en echec :\n' + echecs.join('\n'));
+  }
+}
+window.enregistrerTousRachats = enregistrerTousRachats;
 
 /* ============================= Historique =============================== */
 
@@ -1548,7 +1742,7 @@ function brancherUI() {
       const vue = document.getElementById(b.dataset.v);
       if (vue) vue.classList.add('actif');
       window.scrollTo(0, 0);
-      if (b.dataset.v === 'v-soldes') chargerSoldes();
+      if (b.dataset.v === 'v-soldes') { chargerSoldes(); chargerEquilibrage(); }
       if (b.dataset.v === 'v-histo' && !histoDonnees.length) chargerHistorique();
       if (b.dataset.v === 'v-rapport') chargerCloture();
     });
@@ -1710,7 +1904,7 @@ async function init() {
   setInterval(() => { if (CODE) synchroniser().catch(() => {}); }, 60000);
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js?v=9').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=12').catch(() => {});
   }
 }
 
