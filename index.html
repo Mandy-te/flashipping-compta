@@ -343,7 +343,7 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
     <button class="principal" id="cx-entrer" type="button"
             onclick="seConnecter(this)">Entrer</button>
     <p class="cx-note">Ce code identifie vos saisies. Ne le partagez pas.<br>
-      <span id="cx-version" style="opacity:.6">version 12</span></p>
+      <span id="cx-version" style="opacity:.6">version 13</span></p>
   </div>
 </div>
 
@@ -1018,22 +1018,19 @@ async function chargerSoldes() {
     const n = a.solde_gdes < 0;
     const eff = (a.part_effective * 100);
     const stat = (a.part * 100);
-    const ecart = a.ecart_capital || 0;
 
-    let etat;
-    if (a.a_jour) {
-      etat = `<span class="puce">a jour</span>`;
-    } else if (ecart > 0) {
-      etat = `<span class="puce attente">doit ${gdes(ecart)}</span>`;
-    } else {
-      etat = `<span class="puce">avance ${gdes(-ecart)}</span>`;
-    }
+    // L'ecart de parts n'est plus affiche ici : il se calcule sur la VALEUR
+    // de l'entreprise, pas sur le capital verse. Il vit dans la section
+    // Equilibrage plus bas, pour eviter deux chiffres contradictoires.
+    const etat = a.a_jour
+      ? `<span class="puce">part a jour</span>`
+      : `<span class="puce attente">voir Equilibrage</span>`;
 
     return `<div class="ligne">
       <div class="g">
         <div class="nom">${a.nom}</div>
         <div class="meta">
-          Financement ${eff.toFixed(1)}% &middot; statut ${stat.toFixed(0)}%<br>
+          A finance ${eff.toFixed(1)}% &middot; part statutaire ${stat.toFixed(0)}%<br>
           Apports ${gdes(a.capital_finance)} &middot; profit ${gdes(a.part_profit)}
         </div>
         <div style="margin-top:5px">${etat}</div>
@@ -1051,10 +1048,10 @@ async function chargerSoldes() {
         + 'Le profit se repartit donc selon les parts statutaires 40/20/20/20.';
     } else {
       zoneInfo.className = 'msg err';
-      zoneInfo.innerHTML = 'Les apports ne correspondent pas encore aux parts statutaires. '
-        + 'Le profit est reparti au prorata du financement reel de chacun. '
-        + 'Des que les apports seront a niveau, la repartition redeviendra 40/20/20/20 '
-        + 'automatiquement.';
+      zoneInfo.innerHTML = 'Ci-dessous : ce que chacun a <b>finance</b>, et le profit '
+        + 'qui en decoule. Le profit suit le financement reel, pas les parts '
+        + 'statutaires. Pour savoir qui doit racheter des parts et combien, '
+        + 'voir <b>Equilibrage</b> plus bas.';
     }
   }
 }
@@ -1904,7 +1901,7 @@ async function init() {
   setInterval(() => { if (CODE) synchroniser().catch(() => {}); }, 60000);
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js?v=12').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=13').catch(() => {});
   }
 }
 
