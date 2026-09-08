@@ -1,7 +1,7 @@
 /* Flashipping - Service Worker
    Met en cache la coquille de l'app pour un fonctionnement hors ligne. */
 
-const CACHE = 'flashipping-v13';
+const CACHE = 'flashipping-v15';
 const FICHIERS = [
   './',
   './index.html',
