@@ -29,3 +29,2171 @@ body{
   padding-bottom:84px;
 }
 button,input,select,textarea{font-family:inherit;font-size:16px}
+
+/* ---------- ecran de connexion ---------- */
+#ecran-connexion{
+  position:fixed;inset:0;z-index:200;
+  background:var(--encre);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;overflow-y:auto;
+}
+#ecran-connexion.masque{display:none}
+.cx-boite{width:100%;max-width:340px}
+.cx-logo{text-align:center;margin-bottom:14px}
+.cx-logo img{border-radius:16px;background:#fff;padding:6px}
+#ecran-connexion h1{
+  margin:0;font-size:24px;font-weight:700;text-align:center;letter-spacing:-.01em;
+}
+.cx-sous{
+  margin:2px 0 22px;text-align:center;font-size:13px;color:#8FA3B8;
+}
+#ecran-connexion label{color:#C9D6E2}
+#ecran-connexion input[type=password]{
+  font-size:22px;letter-spacing:.28em;text-align:center;padding:14px;
+}
+#ecran-connexion .coche span{color:#8FA3B8}
+.cx-note{
+  margin-top:16px;font-size:12px;color:#6E8399;text-align:center;line-height:1.4;
+}
+#cx-msg{margin-bottom:4px}
+
+/* bandeau d'identite en haut de l'app */
+.qui{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:14px;font-size:12px;color:#8FA3B8;
+}
+.qui button{
+  background:none;border:1px solid #2C4A66;color:#8FA3B8;
+  padding:5px 11px;border-radius:20px;font-size:12px;cursor:pointer;
+}
+
+/* ---------- barre de statut reseau ---------- */
+#reseau{
+  position:sticky;top:0;z-index:50;
+  padding:7px 16px;font-size:13px;font-weight:600;
+  display:flex;justify-content:space-between;align-items:center;
+  color:#fff;background:var(--vert);
+}
+#reseau.hors-ligne{background:var(--encre-clair)}
+#reseau.attente{background:var(--signal);color:var(--encre)}
+
+/* ---------- entete ---------- */
+header{
+  background:var(--encre);color:#fff;
+  padding:20px 16px 22px;
+}
+header h1{margin:0;font-size:19px;font-weight:700;letter-spacing:-.01em}
+header p{margin:3px 0 0;font-size:12px;color:#8FA3B8}
+
+.solde-bloc{margin-top:18px}
+.solde-bloc .label{font-size:12px;color:#8FA3B8;margin-bottom:2px}
+.solde-bloc .montant{
+  font-size:34px;font-weight:700;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;line-height:1.1;
+}
+.solde-bloc .second{font-size:13px;color:#8FA3B8;margin-top:2px}
+.solde-bloc .montant.neg{color:#FF8A7A}
+
+/* ---------- contenu ---------- */
+main{padding:16px}
+section{display:none}
+section.actif{display:block}
+
+h2{font-size:17px;margin:0 0 12px;font-weight:700}
+.carte{
+  background:var(--carte);border:1px solid var(--trait);
+  border-radius:var(--r);padding:14px;margin-bottom:12px;
+}
+
+/* ---------- formulaires ---------- */
+label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px;color:var(--encre-clair)}
+input,select,textarea{
+  width:100%;padding:12px;border:1px solid var(--trait);
+  border-radius:8px;background:#fff;color:var(--encre);
+}
+input:focus,select:focus,textarea:focus{
+  outline:2px solid var(--signal);outline-offset:-1px;border-color:var(--signal);
+}
+.paire{display:flex;gap:10px}
+.paire>div{flex:1}
+.paire>div.etroit{flex:0 0 108px}
+
+.bascule{display:flex;gap:8px;margin-top:5px}
+.bascule button{
+  flex:1;padding:12px;border:1px solid var(--trait);background:#fff;
+  border-radius:8px;font-weight:600;color:var(--gris);cursor:pointer;
+}
+.bascule button.on{background:var(--encre);color:#fff;border-color:var(--encre)}
+
+.coche{display:flex;align-items:flex-start;gap:10px;margin-top:16px}
+.coche input{width:22px;height:22px;flex:0 0 22px;margin-top:1px}
+.coche span{font-size:13px;color:var(--gris);line-height:1.35}
+
+.principal{
+  width:100%;margin-top:18px;padding:16px;border:0;border-radius:8px;
+  background:var(--signal);color:var(--encre);font-weight:700;font-size:16px;cursor:pointer;
+  transition:transform .06s ease, filter .12s ease;
+  position:relative;
+}
+.principal:active{transform:scale(.97);filter:brightness(.92)}
+.principal:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+/* bouton en cours d'envoi */
+.principal.charge{
+  color:transparent;pointer-events:none;
+  background:var(--encre-clair);
+}
+.principal.charge::after{
+  content:"";position:absolute;top:50%;left:50%;
+  width:20px;height:20px;margin:-10px 0 0 -10px;
+  border:2.5px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;
+  animation:tourne .65s linear infinite;
+}
+@keyframes tourne{to{transform:rotate(360deg)}}
+
+/* retour tactile general */
+.bascule button{transition:transform .06s ease}
+.bascule button:active{transform:scale(.96)}
+.periodes button{transition:transform .06s ease}
+.periodes button:active{transform:scale(.94)}
+nav button{transition:transform .06s ease}
+nav button:active{transform:scale(.92)}
+
+/* flash de confirmation sur la carte */
+@keyframes flashOk{
+  0%{background:#E4F0EA;border-color:var(--vert)}
+  100%{background:var(--carte);border-color:var(--trait)}
+}
+.carte.valide{animation:flashOk 1.1s ease}
+
+.apercu{
+  margin-top:12px;padding:10px 12px;background:#F0EEE8;
+  border-radius:8px;font-size:13px;color:var(--gris);
+  font-variant-numeric:tabular-nums;
+}
+
+/* ---------- messages ---------- */
+.msg{padding:12px 14px;border-radius:8px;font-size:14px;margin-bottom:12px;display:none}
+.msg.ok{display:block;background:#E4F0EA;color:var(--vert);border:1px solid #BFDCCD}
+.msg.err{display:block;background:#F8E6E4;color:var(--rouge);border:1px solid #E8C4C0}
+
+/* ---------- listes ---------- */
+.ligne{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:11px 0;border-bottom:1px solid var(--trait);gap:12px;
+}
+.ligne:last-child{border-bottom:0}
+.ligne .g{min-width:0}
+.ligne .nom{font-weight:600;font-size:15px}
+.ligne .meta{font-size:12px;color:var(--gris)}
+.ligne .val{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ligne .val.neg{color:var(--rouge)}
+.ligne .val.pos{color:var(--vert)}
+
+.puce{
+  display:inline-block;padding:2px 7px;border-radius:20px;
+  font-size:11px;font-weight:600;background:#F0EEE8;color:var(--gris);
+}
+.puce.attente{background:#FBEEDA;color:#8A5D12}
+
+/* ---------- rapports ---------- */
+.periodes{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.periodes button{
+  padding:9px 13px;border:1px solid var(--trait);background:#fff;
+  border-radius:20px;font-size:13px;font-weight:600;color:var(--gris);cursor:pointer;
+}
+.periodes button.on{background:var(--encre);color:#fff;border-color:var(--encre)}
+
+.chiffres{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.chiffre{background:var(--carte);border:1px solid var(--trait);border-radius:var(--r);padding:12px}
+.chiffre .t{font-size:12px;color:var(--gris)}
+.chiffre .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.chiffre .v.neg{color:var(--rouge)}
+.chiffre .v.pos{color:var(--vert)}
+
+/* ---------- navigation ---------- */
+nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:60;
+  display:flex;background:var(--carte);border-top:1px solid var(--trait);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+nav button{
+  flex:1;padding:11px 2px 13px;border:0;background:none;
+  color:var(--gris);font-size:10px;font-weight:600;cursor:pointer;
+  line-height:1.2;
+}
+nav button .ic{display:block;font-size:19px;margin-bottom:2px}
+nav button.on{color:var(--encre)}
+
+.vide{text-align:center;padding:28px 16px;color:var(--gris);font-size:14px}
+
+/* ---------- regularisation ---------- */
+.regul{
+  background:#FBEEDA;border:1px solid #E8C98A;border-radius:var(--r);
+  padding:13px 14px;margin-bottom:12px;
+}
+.regul h3{margin:0 0 4px;font-size:15px;font-weight:700;color:#8A5D12}
+.regul p{margin:0 0 10px;font-size:13px;color:#6E5320;line-height:1.4}
+.regul .total{font-weight:700;font-variant-numeric:tabular-nums}
+.btn-regul{
+  width:100%;padding:12px;border:0;border-radius:8px;
+  background:#8A5D12;color:#fff;font-weight:700;font-size:14px;cursor:pointer;
+  transition:transform .06s ease;position:relative;
+}
+.btn-regul:active{transform:scale(.97)}
+.btn-regul:disabled{opacity:.5;cursor:not-allowed}
+.btn-regul.charge{color:transparent;pointer-events:none}
+.btn-regul.charge::after{
+  content:"";position:absolute;top:50%;left:50%;
+  width:18px;height:18px;margin:-9px 0 0 -9px;
+  border:2.5px solid rgba(255,255,255,.35);
+  border-top-color:#fff;border-radius:50%;
+  animation:tourne .65s linear infinite;
+}
+.regul .bloque{
+  background:#F8E6E4;border:1px solid #E8C4C0;color:var(--rouge);
+  padding:10px 12px;border-radius:8px;font-size:13px;line-height:1.4;
+}
+
+/* ---------- etats financiers ---------- */
+.etat{
+  background:var(--carte);border:1px solid var(--trait);
+  border-radius:var(--r);padding:14px;margin-bottom:14px;
+}
+.etat h3{
+  margin:0 0 3px;font-size:16px;font-weight:700;color:var(--encre);
+}
+.etat .st{font-size:12px;color:var(--gris);margin:0 0 12px}
+.etat .sect{
+  font-size:12px;font-weight:700;color:var(--encre-clair);
+  text-transform:uppercase;letter-spacing:.04em;
+  padding:12px 0 5px;border-bottom:1px solid var(--trait);
+}
+.etat .tot{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:11px 0 3px;margin-top:5px;border-top:2px solid var(--encre);
+  font-weight:700;font-variant-numeric:tabular-nums;
+}
+.etat .grand{
+  font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;
+}
+.bilan-ok{
+  margin-top:10px;padding:9px 12px;border-radius:8px;font-size:12px;
+  background:#E4F0EA;color:var(--vert);border:1px solid #BFDCCD;
+}
+.bilan-ko{
+  margin-top:10px;padding:9px 12px;border-radius:8px;font-size:12px;
+  background:#F8E6E4;color:var(--rouge);border:1px solid #E8C4C0;
+}
+
+/* ---------- equilibrage des parts ---------- */
+.eq-bloc{
+  background:var(--carte);border:1px solid var(--trait);
+  border-radius:var(--r);padding:14px;margin-bottom:12px;
+}
+.eq-bloc h3{margin:0 0 6px;font-size:15px;font-weight:700}
+.eq-bloc .expl{
+  font-size:13px;color:var(--gris);line-height:1.45;margin:0 0 12px;
+}
+.eq-transfert{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:11px 0;border-bottom:1px solid var(--trait);gap:10px;
+}
+.eq-transfert:last-child{border-bottom:0}
+.eq-transfert .qui{
+  display:block;margin:0;font-size:14px;color:var(--encre);
+}
+.eq-transfert .fleche{color:var(--gris);font-size:12px}
+.eq-transfert .m{
+  font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.puce.acheter{background:#FBEEDA;color:#8A5D12}
+.puce.vendre{background:#E4F0EA;color:var(--vert)}
+
+/* ---------- annulation / cloture ---------- */
+.mini-annuler{
+  margin-top:7px;padding:5px 12px;border:1px solid var(--trait);
+  background:#fff;border-radius:20px;font-size:12px;font-weight:600;
+  color:var(--rouge);cursor:pointer;
+}
+.mini-annuler:active{transform:scale(.95)}
+.ligne.barree .nom,
+.ligne.barree .val{text-decoration:line-through;opacity:.55}
+
+.cloture-bloc{
+  background:var(--carte);border:1px solid var(--trait);
+  border-radius:var(--r);padding:14px;margin-bottom:12px;
+}
+.cloture-bloc h3{margin:0 0 8px;font-size:15px;font-weight:700}
+.alerte-taux{
+  background:#FBEEDA;border:1px solid #E8C98A;color:#8A5D12;
+  padding:11px 13px;border-radius:8px;font-size:13px;
+  margin-bottom:12px;line-height:1.4;
+}
+
+/* ---------- historique ---------- */
+.jour{
+  font-size:12px;font-weight:700;color:var(--gris);
+  text-transform:uppercase;letter-spacing:.04em;
+  padding:14px 0 6px;border-bottom:1px solid var(--trait);
+}
+.jour:first-child{padding-top:2px}
+.ligne .date{font-size:12px;color:var(--gris);font-variant-numeric:tabular-nums}
+.ligne .ref{font-size:11px;color:var(--trait)}
+nav button .ic{display:block;font-size:19px;margin-bottom:2px}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important}
+  .carte.valide{animation:none!important}
+  /* on garde le spinner : c'est un temoin d'etat, pas une decoration */
+  .principal.charge::after{animation:tourne 1.2s linear infinite!important}
+}
+</style>
+</head>
+<body>
+
+<div id="ecran-connexion">
+  <div class="cx-boite">
+    <div class="cx-logo">
+      <img src="icone-192.png" alt="" width="72" height="72">
+    </div>
+    <h1>Flashipping</h1>
+    <p class="cx-sous">Caisse &amp; comptabilité</p>
+
+    <div class="msg" id="cx-msg"></div>
+
+    <label for="cx-code">Votre code d'accès</label>
+    <input type="password" id="cx-code" inputmode="numeric"
+           autocomplete="off" placeholder="••••••">
+
+    <label class="coche" style="margin-top:12px">
+      <input type="checkbox" id="cx-garder" checked>
+      <span>Rester connecté sur ce téléphone</span>
+    </label>
+
+    <button class="principal" id="cx-entrer" type="button"
+            onclick="seConnecter(this)">Entrer</button>
+    <p class="cx-note">Ce code identifie vos saisies. Ne le partagez pas.<br>
+      <span id="cx-version" style="opacity:.6">version 15</span></p>
+  </div>
+</div>
+
+<div id="reseau">
+  <span id="reseau-txt">Connexion…</span>
+  <span id="reseau-file"></span>
+</div>
+
+<header>
+  <h1>Flashipping</h1>
+  <p>PI RAPID · PI SEKIRIZE · PI BA PRI</p>
+  <div class="qui">
+    <span id="qui-nom">—</span>
+    <button id="qui-sortir" type="button">Se déconnecter</button>
+  </div>
+
+  <div class="solde-bloc">
+    <div class="label">Tresorerie disponible</div>
+    <div class="montant" id="solde-ent">—</div>
+    <div class="second" id="solde-ent-usd"></div>
+    <div class="second" id="valeur-ent" style="margin-top:6px"></div>
+  </div>
+</header>
+
+<main>
+  <!-- ============ DEPENSE ============ -->
+  <section id="v-depense" class="actif">
+    <h2>Enregistrer une dépense</h2>
+    <div class="msg" id="msg-dep"></div>
+    <div class="carte">
+      <label for="d-date">Date</label>
+      <input type="date" id="d-date">
+
+      <label for="d-objet">Objet de la dépense</label>
+      <select id="d-objet"></select>
+
+      <label for="d-agence">Agence <span style="color:var(--rouge)">*</span></label>
+      <select id="d-agence"></select>
+
+      <div class="paire">
+        <div>
+          <label for="d-montant">Montant</label>
+          <input type="number" id="d-montant" inputmode="decimal" step="0.01" placeholder="0.00">
+        </div>
+        <div class="etroit">
+          <label>Devise</label>
+          <div class="bascule" id="d-devise">
+            <button type="button" class="on" data-v="Gourdes">Gdes</button>
+            <button type="button" data-v="USD">USD</button>
+          </div>
+        </div>
+      </div>
+
+      <label for="d-desc">Description</label>
+      <input type="text" id="d-desc" placeholder="Ex : lot Boxpaq semaine 24 août">
+
+      <div class="apercu" id="d-apercu">Saisissez un montant pour voir la conversion.</div>
+
+      <label class="coche">
+        <input type="checkbox" id="d-actif">
+        <span>C'est un achat d'actif (moto, ordinateur, mobilier…).
+          Le cash sort mais le bien reste au bilan : la valeur de
+          l'entreprise ne baisse pas.</span>
+      </label>
+
+      <div id="d-actif-champs" style="display:none">
+        <label for="d-actif-cat">Categorie de l'actif</label>
+        <select id="d-actif-cat">
+          <option>Vehicule</option><option>Materiel</option>
+          <option>Informatique</option><option>Mobilier</option>
+          <option>Amenagement</option><option>Caution</option>
+          <option>Autre</option>
+        </select>
+
+        <div class="paire">
+          <div>
+            <label for="d-duree">Duree de vie (mois)</label>
+            <input type="number" id="d-duree" inputmode="numeric" value="60">
+          </div>
+          <div>
+            <label for="d-residuelle">Valeur en fin de vie</label>
+            <input type="number" id="d-residuelle" inputmode="decimal" value="0">
+          </div>
+        </div>
+        <div class="apercu" id="d-actif-apercu">
+          Moto 60 mois &middot; Hiace 84 &middot; ordinateur 36 &middot;
+          mobilier 120 &middot; 0 = ne perd pas de valeur (caution, terrain).
+        </div>
+      </div>
+
+      <label class="coche">
+        <input type="checkbox" id="d-urgente">
+        <span>Dépense urgente déjà payée. À cocher seulement si l'argent est sorti et que le solde ne couvre pas — la ligne partira dans « À régulariser ».</span>
+      </label>
+
+      <button class="principal" id="d-envoyer">Enregistrer la dépense</button>
+    </div>
+  </section>
+
+  <!-- ============ REVENU ============ -->
+  <section id="v-revenu">
+    <h2>Enregistrer un revenu</h2>
+    <div class="msg" id="msg-rev"></div>
+    <div class="carte">
+      <label for="r-date">Date</label>
+      <input type="date" id="r-date">
+
+      <label for="r-source">Source</label>
+      <select id="r-source">
+        <option>Colis Livre</option>
+        <option>Commission Commande</option>
+        <option>Fret Aerien</option>
+        <option>Fret Maritime</option>
+        <option>Autre Revenu</option>
+      </select>
+
+      <label for="r-agence">Agence <span style="color:var(--rouge)">*</span></label>
+      <select id="r-agence"></select>
+
+      <div class="paire">
+        <div>
+          <label for="r-montant">Montant</label>
+          <input type="number" id="r-montant" inputmode="decimal" step="0.01" placeholder="0.00">
+        </div>
+        <div class="etroit">
+          <label>Devise</label>
+          <div class="bascule" id="r-devise">
+            <button type="button" class="on" data-v="Gourdes">Gdes</button>
+            <button type="button" data-v="USD">USD</button>
+          </div>
+        </div>
+      </div>
+
+      <label for="r-poids">Poids livré (livres)</label>
+      <input type="number" id="r-poids" inputmode="decimal" step="0.01" placeholder="0">
+
+      <label for="r-client">Client</label>
+      <input type="text" id="r-client" placeholder="Nom du client">
+
+      <label for="r-desc">Explication</label>
+      <input type="text" id="r-desc"
+             placeholder="Ex : 6 colis livrés, lot du 24 août">
+
+      <div class="apercu" id="r-apercu">Saisissez un montant pour voir la conversion.</div>
+
+      <button class="principal" id="r-envoyer">Enregistrer le revenu</button>
+    </div>
+  </section>
+
+  <!-- ============ CONTRIBUTION ============ -->
+  <section id="v-contrib">
+    <h2>Contribution d'un associé</h2>
+    <div class="msg" id="msg-ctr"></div>
+    <div class="carte">
+      <label for="c-date">Date</label>
+      <input type="date" id="c-date">
+
+      <label for="c-associe">Associé</label>
+      <select id="c-associe"></select>
+
+      <label for="c-type">Type</label>
+      <select id="c-type">
+        <option>Apport Cash</option>
+        <option>Apport Initial</option>
+        <option>Regularisation</option>
+        <option>Retrait</option>
+        <option>Rachat de parts</option>
+        <option>Cession de parts</option>
+        <option>Rachat de parts</option>
+        <option>Cession de parts</option>
+      </select>
+
+      <div class="paire">
+        <div>
+          <label for="c-montant">Montant</label>
+          <input type="number" id="c-montant" inputmode="decimal" step="0.01" placeholder="0.00">
+        </div>
+        <div class="etroit">
+          <label>Devise</label>
+          <div class="bascule" id="c-devise">
+            <button type="button" class="on" data-v="Gourdes">Gdes</button>
+            <button type="button" data-v="USD">USD</button>
+          </div>
+        </div>
+      </div>
+
+      <label for="c-mode">Mode de paiement</label>
+      <select id="c-mode">
+        <option>Natcash</option><option>MonCash</option>
+        <option>Especes</option><option>Virement</option><option>Autre</option>
+      </select>
+
+      <label for="c-ref">Référence</label>
+      <input type="text" id="c-ref" placeholder="N° de transaction">
+
+      <div class="apercu" id="c-apercu">Saisissez un montant pour voir la conversion.</div>
+
+      <button class="principal" id="c-envoyer">Enregistrer la contribution</button>
+    </div>
+  </section>
+
+  <!-- ============ SOLDES ============ -->
+  <section id="v-soldes">
+    <h2>Soldes des associés</h2>
+    <div class="msg" id="info-repartition"></div>
+    <div class="carte" id="liste-soldes">
+      <div class="vide">Chargement…</div>
+    </div>
+    <button class="principal" id="s-rafraichir">Actualiser</button>
+
+    <div id="zone-equilibrage" style="margin-top:26px"></div>
+  </section>
+
+  <!-- ============ HISTORIQUE ============ -->
+  <section id="v-histo">
+    <h2>Historique</h2>
+    <div class="periodes" id="histo-onglets">
+      <button class="on" data-t="depense">Dépenses</button>
+      <button data-t="revenu">Revenus</button>
+      <button data-t="contribution">Apports</button>
+    </div>
+    <input type="search" id="histo-recherche" placeholder="Rechercher…"
+           style="margin-bottom:12px">
+    <div id="histo-regul"></div>
+    <div id="histo-resume" class="apercu" style="margin-bottom:12px">—</div>
+    <div class="carte" id="histo-liste">
+      <div class="vide">Chargement…</div>
+    </div>
+    <button class="principal" id="histo-actualiser"
+            style="margin-bottom:24px">Actualiser</button>
+  </section>
+
+  <!-- ============ RAPPORTS ============ -->
+  <section id="v-rapport">
+    <h2>Rapports</h2>
+    <div class="periodes" id="periodes">
+      <button class="on" data-p="journalier">Jour</button>
+      <button data-p="hebdomadaire">Semaine</button>
+      <button data-p="mensuel">Mois</button>
+      <button data-p="trimestriel">Trimestre</button>
+      <button data-p="semestriel">Semestre</button>
+      <button data-p="annuel">Année</button>
+    </div>
+    <div class="periodes" id="vue-rapport" style="margin-bottom:14px">
+      <button class="on" data-vue="synthese">Synthèse</button>
+      <button data-vue="etats">États financiers</button>
+    </div>
+
+    <div id="rapport-zone"><div class="vide">Choisissez une période.</div></div>
+    <div id="etats-zone" style="display:none"></div>
+
+    <div id="zone-cloture" style="margin-top:26px"></div>
+  </section>
+</main>
+
+<nav>
+  <button class="on" data-v="v-depense"><span class="ic">−</span>Dépense</button>
+  <button data-v="v-revenu"><span class="ic">+</span>Revenu</button>
+  <button data-v="v-contrib"><span class="ic">◆</span>Apport</button>
+  <button data-v="v-soldes"><span class="ic">≡</span>Soldes</button>
+  <button data-v="v-histo"><span class="ic">↺</span>Historique</button>
+  <button data-v="v-rapport"><span class="ic">▤</span>Rapports</button>
+</nav>
+
+<script>
+/* =========================================================================
+   FLASHIPPING - Logique PWA
+   Fonctionne hors ligne : les saisies sont mises en file dans IndexedDB
+   puis envoyees automatiquement des que le reseau revient.
+   ========================================================================= */
+
+/* -------- A CONFIGURER ------------------------------------------------- */
+const API_URL = 'https://script.google.com/macros/s/AKfycbzNuGnTf4saAoYUdTlgW1xONDHYNCcobB8S4xTKJRZ6ed5rsr6xfwoz29T53ttHellYBA/exec';
+let CODE = '';          // code agent, saisi a la connexion
+let MOI  = null;        // { nom, role, agence_id }
+/* ----------------------------------------------------------------------- */
+
+const OBJETS_DEPENSE = {
+  'Logistique': ['Colis Boxpaq','Hiace','Moto Ouanaminthe','Moto Cap-Haitien',
+                 'Douane','Sac','Frais Transfert','Frais Retrait','Essence/Carburant'],
+  'RH': ['Salaire Employe','Commission Partenaire','Salaire Associe'],
+  'Structure': ['Loyer','Electricite','Internet/Telephone','Impressions/Fournitures'],
+  'Marketing': ['Publicite','Reseaux Sociaux'],
+  'Autre': ['Entretien Vehicule','Frais Bancaires','Divers']
+};
+
+let etat = {
+  taux: 135,
+  associes: [],
+  agences: [],
+  enLigne: navigator.onLine,
+  fileCount: 0
+};
+
+
+/* --- helpers tolerants : un element absent ne casse plus le demarrage --- */
+function $(id) { return document.getElementById(id); }
+
+function on(id, evt, fn) {
+  var el = document.getElementById(id);
+  if (el) el.addEventListener(evt, fn);
+  return !!el;
+}
+
+function onAll(sel, evt, fn) {
+  document.querySelectorAll(sel).forEach(function (el) {
+    el.addEventListener(evt, fn);
+  });
+}
+
+function valeur(id) {
+  var el = document.getElementById(id);
+  return el ? el.value : '';
+}
+
+function erreurFatale(e) {
+  console.error(e);
+  var bar = document.getElementById('reseau');
+  if (bar) {
+    bar.className = 'attente';
+    var t = document.getElementById('reseau-txt');
+    if (t) t.textContent = 'Erreur de demarrage - voir message';
+  }
+  var m = document.getElementById('msg-dep');
+  if (m) {
+    m.className = 'msg err';
+    m.textContent = 'Erreur au demarrage : ' + (e && e.message ? e.message : e)
+      + '. Verifiez que index.html et le script sont bien a jour.';
+  }
+}
+
+/* ====================== IndexedDB : file d'attente ====================== */
+
+let db = null;
+let memFile = [];   // repli si IndexedDB est indisponible
+let memCache = {};
+
+/* Bandeau d'erreur visible (pas de console sur telephone) */
+function erreurGlobale(txt) {
+  let el = document.getElementById('erreur-globale');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'erreur-globale';
+    el.style.cssText = 'position:fixed;bottom:64px;left:8px;right:8px;z-index:999;'
+      + 'background:#B3352C;color:#fff;padding:10px 12px;border-radius:8px;'
+      + 'font-size:12px;line-height:1.35;white-space:pre-wrap';
+    el.addEventListener('click', () => el.remove());
+    document.body.appendChild(el);
+  }
+  el.textContent = 'Erreur : ' + txt + '\n(toucher pour fermer)';
+}
+
+window.addEventListener('error', (e) => erreurGlobale(e.message));
+window.addEventListener('unhandledrejection', (e) =>
+  erreurGlobale(String(e.reason && e.reason.message || e.reason)));
+
+function ouvrirDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('flashipping', 1);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('file')) {
+        d.createObjectStore('file', { keyPath: 'local_id' });
+      }
+      if (!d.objectStoreNames.contains('cache')) {
+        d.createObjectStore('cache', { keyPath: 'cle' });
+      }
+    };
+    req.onsuccess = () => { db = req.result; resolve(db); };
+    req.onerror = () => { db = null; resolve(null); };   // on continue en memoire
+    setTimeout(() => { if (!db) resolve(null); }, 3000);  // WebView bloquee
+  });
+}
+
+function tx(store, mode) {
+  return db.transaction(store, mode).objectStore(store);
+}
+
+function fileAjouter(item) {
+  if (!db) { memFile.push(item); return Promise.resolve(); }
+  return new Promise((res) => {
+    try {
+      const r = tx('file', 'readwrite').add(item);
+      r.onsuccess = () => res();
+      r.onerror = () => { memFile.push(item); res(); };
+    } catch (e) { memFile.push(item); res(); }
+  });
+}
+
+function fileLire() {
+  if (!db) return Promise.resolve(memFile.slice());
+  return new Promise((res) => {
+    try {
+      const r = tx('file', 'readonly').getAll();
+      r.onsuccess = () => res(r.result || []);
+      r.onerror = () => res(memFile.slice());
+    } catch (e) { res(memFile.slice()); }
+  });
+}
+
+function fileSupprimer(id) {
+  memFile = memFile.filter((x) => x.local_id !== id);
+  if (!db) return Promise.resolve();
+  return new Promise((res) => {
+    try {
+      const r = tx('file', 'readwrite').delete(id);
+      r.onsuccess = () => res(); r.onerror = () => res();
+    } catch (e) { res(); }
+  });
+}
+
+function cacheEcrire(cle, valeur) {
+  memCache[cle] = valeur;
+  if (!db) return Promise.resolve();
+  return new Promise((res) => {
+    try {
+      const r = tx('cache', 'readwrite').put({ cle, valeur, t: Date.now() });
+      r.onsuccess = () => res(); r.onerror = () => res();
+    } catch (e) { res(); }
+  });
+}
+
+function cacheLire(cle) {
+  if (!db) return Promise.resolve(memCache[cle] || null);
+  return new Promise((res) => {
+    try {
+      const r = tx('cache', 'readonly').get(cle);
+      r.onsuccess = () => res(r.result ? r.result.valeur : (memCache[cle] || null));
+      r.onerror = () => res(memCache[cle] || null);
+    } catch (e) { res(memCache[cle] || null); }
+  });
+}
+
+/* ============================== Réseau ================================= */
+
+async function api(payload) {
+  const r = await fetch(API_URL, {
+    method: 'POST',
+    // text/plain evite le preflight CORS qu'Apps Script ne gere pas
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(Object.assign({ code: CODE }, payload))
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return await r.json();
+}
+
+async function majReseau() {
+  const bar = document.getElementById('reseau');
+  const txt = document.getElementById('reseau-txt');
+  const cpt = document.getElementById('reseau-file');
+  const file = await fileLire();
+  etat.fileCount = file.length;
+
+  cpt.textContent = file.length ? file.length + ' en attente' : '';
+
+  if (!navigator.onLine) {
+    bar.className = 'hors-ligne';
+    txt.textContent = 'Hors ligne — les saisies sont gardées';
+  } else if (file.length) {
+    bar.className = 'attente';
+    txt.textContent = 'Envoi en cours…';
+  } else {
+    bar.className = '';
+    txt.textContent = 'En ligne';
+  }
+}
+
+async function synchroniser() {
+  if (!navigator.onLine || !CODE) return;
+  const file = await fileLire();
+  if (!file.length) return;
+
+  await majReseau();
+  try {
+    const rep = await api({ action: 'lot', data: file });
+    if (rep && rep.ok) {
+      for (const r of rep.resultats) {
+        if (r.resultat && r.resultat.ok) {
+          await fileSupprimer(r.local_id);
+        } else if (r.resultat && r.resultat.code === 'SOLDE_INSUFFISANT') {
+          // On NE supprime PAS : la saisie reste en attente et repartira
+          // toute seule apres un apport. L'agent n'a rien a retaper.
+          erreurGlobale('Saisie en attente refusee : ' + r.resultat.message
+            + '\nElle est conservee et sera renvoyee apres un apport.');
+        } else {
+          // refus definitif (donnee invalide) : on retire, sinon la file
+          // resterait bloquee indefiniment sur cette ligne
+          erreurGlobale('Saisie abandonnee : '
+            + ((r.resultat && r.resultat.message) || 'erreur inconnue'));
+          await fileSupprimer(r.local_id);
+        }
+      }
+    }
+  } catch (e) {
+    // on retentera plus tard
+  }
+  await majReseau();
+  await chargerSoldes();
+}
+
+/* ============================ Utilitaires =============================== */
+
+const gdes = (n) => Number(n || 0).toLocaleString('fr-FR',
+  { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' G';
+const usd = (n) => '$' + Number(n || 0).toLocaleString('en-US',
+  { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+function aujourdhui() {
+  const d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
+function afficher(id, type, texte) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'msg ' + type;
+  el.textContent = texte;
+  if (type === 'ok') setTimeout(() => { el.className = 'msg'; }, 5000);
+}
+
+function deviseActive(id) {
+  const on = document.querySelector('#' + id + ' button.on');
+  return on ? on.dataset.v : 'Gourdes';
+}
+
+function brancherBascule(id, onChange) {
+  document.querySelectorAll('#' + id + ' button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('#' + id + ' button')
+        .forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      if (onChange) onChange();
+    });
+  });
+}
+
+function nomAgence(id) {
+  var a = (etat.agences || []).filter(function (x) {
+    return String(x.agence_id).trim() === String(id).trim();
+  });
+  return a.length ? a[0].nom_agence : id;
+}
+
+function apercuConversion(inputId, deviseId, cibleId) {
+  const v = parseFloat(document.getElementById(inputId).value);
+  const el = document.getElementById(cibleId);
+  if (isNaN(v) || v <= 0) {
+    el.textContent = 'Saisissez un montant pour voir la conversion.';
+    return;
+  }
+  const dev = deviseActive(deviseId);
+  const g = dev === 'USD' ? v * etat.taux : v;
+  const u = dev === 'USD' ? v : v / etat.taux;
+  var champAgence = inputId.charAt(0) + '-agence';
+  var ag = document.getElementById(champAgence);
+  var suffixe = ag ? '\n' + nomAgence(ag.value) : '';
+  el.style.whiteSpace = 'pre-line';
+  el.textContent = gdes(g) + '  ·  ' + usd(u) + '   (taux ' + etat.taux + ')' + suffixe;
+}
+
+function localId() {
+  return 'L' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+}
+
+/* ======================== Envoi d'une saisie ============================ */
+
+// Verrou global : empeche tout double-envoi, meme si l'agent
+// tape plusieurs fois pendant que le reseau rame.
+let envoiEnCours = false;
+
+function vibrer(ms) {
+  if (navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) {} }
+}
+
+function flashCarte(btn) {
+  const carte = btn.closest('.carte');
+  if (!carte) return;
+  carte.classList.remove('valide');
+  void carte.offsetWidth;          // force le redemarrage de l'animation
+  carte.classList.add('valide');
+  setTimeout(() => carte.classList.remove('valide'), 1200);
+}
+
+async function soumettre(type, payload, msgId, apresSucces, btn) {
+  if (envoiEnCours) return;
+  envoiEnCours = true;
+
+  if (btn) { btn.classList.add('charge'); btn.disabled = true; }
+  vibrer(12);
+
+  const item = { local_id: localId(), type, payload, cree: Date.now() };
+
+  const liberer = () => {
+    envoiEnCours = false;
+    if (btn) { btn.classList.remove('charge'); btn.disabled = false; }
+  };
+
+  const succes = (texte) => {
+    histoDonnees = [];          // force le rechargement de l'historique
+    afficher(msgId, 'ok', texte);
+    apresSucces();
+    if (btn) flashCarte(btn);
+    vibrer([18, 60, 18]);
+  };
+
+  if (!navigator.onLine) {
+    await fileAjouter(item);
+    await majReseau();
+    succes('Enregistré sur le téléphone. Envoi dès le retour du réseau.');
+    liberer();
+    return;
+  }
+
+  try {
+    const rep = await api({ action: type, data: payload });
+    if (rep.ok) {
+      succes('Enregistré — ' + rep.id + ' · ' + gdes(rep.montant_gdes));
+      await chargerSoldes();
+    } else if (rep.code === 'SOLDE_INSUFFISANT') {
+      afficher(msgId, 'err', rep.message);
+      vibrer(220);
+    } else {
+      afficher(msgId, 'err', rep.message || 'Enregistrement refusé.');
+      vibrer(220);
+    }
+  } catch (e) {
+    await fileAjouter(item);
+    await majReseau();
+    succes('Réseau indisponible. Gardé sur le téléphone, envoi automatique plus tard.');
+  } finally {
+    liberer();
+  }
+}
+
+/* ========================= Données de référence ========================= */
+
+async function chargerReference() {
+  let ref = null;
+  try {
+    ref = await api({ action: 'reference' });
+    if (ref.ok) await cacheEcrire('reference', ref);
+  } catch (e) {
+    ref = await cacheLire('reference');
+  }
+  if (!ref || !ref.ok) return;
+
+  etat.taux = ref.taux || 135;
+  etat.associes = ref.associes || [];
+  etat.agences = ref.agences || [];
+
+  // agences
+  // L'agence par defaut est celle de l'agent connecte (onglet Utilisateurs),
+  // sinon la derniere utilisee sur ce telephone. Evite de tout tagger
+  // sur la premiere agence de la liste sans s'en rendre compte.
+  const agenceDefaut = (MOI && MOI.agence_id)
+    || relire('flashipping_derniere_agence')
+    || (etat.agences[0] && etat.agences[0].agence_id) || '';
+
+  const optAg = etat.agences.map(a =>
+    `<option value="${a.agence_id}"${a.agence_id === agenceDefaut ? ' selected' : ''}>`
+    + `${a.nom_agence}</option>`).join('');
+  document.getElementById('d-agence').innerHTML = optAg;
+  document.getElementById('r-agence').innerHTML = optAg;
+
+  ['d-agence', 'r-agence'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.value = agenceDefaut;
+    el.addEventListener('change', function () {
+      memoriser('flashipping_derniere_agence', el.value);
+      var autre = document.getElementById(id === 'd-agence' ? 'r-agence' : 'd-agence');
+      if (autre) autre.value = el.value;
+      var rappel = document.getElementById(
+        id === 'd-agence' ? 'd-agence-rappel' : 'r-agence-rappel');
+      if (rappel) rappel.textContent = '';
+    });
+  });
+
+  // associes
+  document.getElementById('c-associe').innerHTML = etat.associes.map(a =>
+    `<option value="${a.associe_id}">${a.nom_complet}</option>`).join('');
+
+  // objets de depense groupes
+  document.getElementById('d-objet').innerHTML =
+    Object.entries(OBJETS_DEPENSE).map(([cat, list]) =>
+      `<optgroup label="${cat}">` +
+      list.map(o => `<option value="${o}" data-cat="${cat}">${o}</option>`).join('') +
+      `</optgroup>`).join('');
+}
+
+async function chargerSoldes() {
+  let s = null;
+  try {
+    s = await api({ action: 'soldes' });
+    if (s.ok) await cacheEcrire('soldes', s);
+  } catch (e) {
+    s = await cacheLire('soldes');
+  }
+  if (!s || !s.ok) return;
+
+  const neg = s.solde_entreprise_gdes < 0;
+  const el = document.getElementById('solde-ent');
+  el.textContent = gdes(s.solde_entreprise_gdes);
+  el.className = 'montant' + (neg ? ' neg' : '');
+  document.getElementById('solde-ent-usd').textContent =
+    usd(s.solde_entreprise_usd) + '  ·  taux ' + s.taux;
+
+  const zv = document.getElementById('valeur-ent');
+  if (zv) {
+    if (s.actifs_nets_gdes > 0) {
+      zv.innerHTML = 'Valeur de l\'entreprise <b>' + gdes(s.valeur_entreprise_gdes)
+        + '</b><br>tresorerie + actifs nets ' + gdes(s.actifs_nets_gdes);
+    } else {
+      zv.textContent = '';
+    }
+  }
+
+  document.getElementById('liste-soldes').innerHTML = s.associes.map(a => {
+    const n = a.solde_gdes < 0;
+    const eff = (a.part_effective * 100);
+    const stat = (a.part * 100);
+
+    // L'ecart de parts n'est plus affiche ici : il se calcule sur la VALEUR
+    // de l'entreprise, pas sur le capital verse. Il vit dans la section
+    // Equilibrage plus bas, pour eviter deux chiffres contradictoires.
+    const etat = a.a_jour
+      ? `<span class="puce">part a jour</span>`
+      : `<span class="puce attente">voir Equilibrage</span>`;
+
+    return `<div class="ligne">
+      <div class="g">
+        <div class="nom">${a.nom}</div>
+        <div class="meta">
+          A finance ${eff.toFixed(1)}% &middot; part statutaire ${stat.toFixed(0)}%<br>
+          Apports ${gdes(a.capital_finance)} &middot; profit ${gdes(a.part_profit)}
+        </div>
+        <div style="margin-top:5px">${etat}</div>
+      </div>
+      <div class="val ${n ? 'neg' : ''}">${gdes(a.solde_gdes)}</div>
+    </div>`;
+  }).join('') || '<div class="vide">Aucun associe actif.</div>';
+
+  // bandeau d'explication du mode de repartition
+  const zoneInfo = document.getElementById('info-repartition');
+  if (zoneInfo) {
+    if (s.parts_equilibrees) {
+      zoneInfo.className = 'msg ok';
+      zoneInfo.innerHTML = 'Tous les associes financent a hauteur de leur part. '
+        + 'Le profit se repartit donc selon les parts statutaires 40/20/20/20.';
+    } else {
+      zoneInfo.className = 'msg err';
+      zoneInfo.innerHTML = 'Ci-dessous : ce que chacun a <b>finance</b>, et le profit '
+        + 'qui en decoule. Le profit suit le financement reel, pas les parts '
+        + 'statutaires. Pour savoir qui doit racheter des parts et combien, '
+        + 'voir <b>Equilibrage</b> plus bas.';
+    }
+  }
+}
+
+
+/* ========================= Equilibrage des parts ======================== */
+
+let planEq = null;
+
+async function chargerEquilibrage() {
+  const zone = document.getElementById('zone-equilibrage');
+  if (!zone) return;
+  if (!MOI || MOI.role !== 'Admin') { zone.innerHTML = ''; return; }
+
+  try {
+    planEq = await api({ action: 'equilibrage' });
+  } catch (e) { zone.innerHTML = ''; return; }
+  if (!planEq || !planEq.ok) { zone.innerHTML = ''; return; }
+
+  let html = '<h2>Equilibrage des parts</h2>';
+
+  html += `<div class="eq-bloc">
+    <h3>Valeur actuelle de l'entreprise</h3>
+    <div style="font-size:26px;font-weight:700;font-variant-numeric:tabular-nums">
+      ${gdes(planEq.valeur_entreprise_gdes)}</div>
+    <div class="ligne" style="margin-top:10px">
+      <div class="g"><div class="nom">Tresorerie</div>
+        <div class="meta">Cash disponible</div></div>
+      <div class="val">${gdes(planEq.tresorerie_gdes)}</div></div>
+    <div class="ligne">
+      <div class="g"><div class="nom">Actifs nets</div>
+        <div class="meta">Biens, apres usure</div></div>
+      <div class="val">${gdes(planEq.actifs_nets_gdes || 0)}</div></div>
+    <p class="expl" style="margin-top:10px">
+      Une part porte sur cette valeur : tresorerie <b>et</b> actifs, profits
+      compris. Elle augmente quand l'entreprise gagne, donc entrer coute
+      plus cher aujourd'hui qu'hier.
+    </p>
+  </div>`;
+
+  if (planEq.equilibre) {
+    html += `<div class="eq-bloc">
+      <h3>Parts equilibrees</h3>
+      <p class="expl" style="margin:0">
+        Chaque associe detient exactement sa part statutaire. Rien a transferer.</p>
+    </div>`;
+    zone.innerHTML = html;
+    return;
+  }
+
+  html += `<div class="eq-bloc"><h3>Positions</h3>` +
+    planEq.positions.map(p => {
+      let etat;
+      if (p.a_jour) etat = '<span class="puce">a jour</span>';
+      else if (p.doit_acheter > 0)
+        etat = `<span class="puce acheter">doit acheter ${gdes(p.doit_acheter)}</span>`;
+      else
+        etat = `<span class="puce vendre">peut vendre ${gdes(p.peut_vendre)}</span>`;
+      return `<div class="ligne">
+        <div class="g"><div class="nom">${p.nom}</div>
+          <div class="meta">Detient ${gdes(p.detient_gdes)}${
+            p.detient_actifs_gdes > 0
+              ? ` (cash ${gdes(p.detient_cash_gdes)} + actifs ${gdes(p.detient_actifs_gdes)})`
+              : ''}<br>
+            Cible ${(p.part * 100).toFixed(0)}% = ${gdes(p.cible_gdes)}</div>
+          <div style="margin-top:5px">${etat}</div></div>
+      </div>`;
+    }).join('') + `</div>`;
+
+  html += `<div class="eq-bloc">
+    <h3>Transferts a effectuer</h3>
+    <p class="expl">
+      Cet argent ne rentre pas dans la caisse : il va aux associes qui ont
+      finance au-dela de leur part. La valeur de l'entreprise ne change pas.
+    </p>` +
+    (planEq.cloture_requise
+      ? `<div class="bloque" style="margin-bottom:12px">
+           <strong>Cloturez la periode avant d'enregistrer ces transferts.</strong><br>
+           Tant que le profit n'est pas fige, il continue d'etre reparti selon
+           le financement. Si les parts changent maintenant, ce profit deja
+           gagne serait redistribue retroactivement et les parts finales
+           seraient fausses. Onglet Rapports, en bas : Cloture mensuelle.
+         </div>`
+      : '') +
+    planEq.transferts.map(t => `<div class="eq-transfert">
+      <div>
+        <span class="qui"><strong>${t.acheteur}</strong></span>
+        <span class="fleche">paie a</span>
+        <span class="qui"><strong>${t.vendeur}</strong></span>
+      </div>
+      <div class="m">${gdes(t.montant_gdes)}</div>
+    </div>`).join('') +
+    (planEq.cloture_requise
+      ? `<p class="expl" style="margin:10px 0 0">
+           Enregistrement possible apres la cloture.</p>`
+      : `<button class="principal" onclick="enregistrerTousRachats(this)">
+           Enregistrer ces ${planEq.transferts.length} transferts</button>
+         <p class="expl" style="margin:10px 0 0">
+           A faire seulement une fois l'argent reellement remis.</p>`)
+   + `</div>`;
+
+  zone.innerHTML = html;
+}
+
+async function enregistrerTousRachats(btn) {
+  if (!planEq || !planEq.transferts.length) return;
+
+  if (!confirm('Enregistrer ' + planEq.transferts.length + ' transfert(s) ?\n\n'
+    + 'Total : ' + gdes(planEq.total_a_transferer_gdes) + '\n\n'
+    + "A ne faire qu'une fois l'argent reellement remis de la main a la main.\n"
+    + 'Les parts passeront ensuite a 40/20/20/20.')) return;
+
+  btn.classList.add('charge');
+  btn.disabled = true;
+
+  let faits = 0, echecs = [];
+  for (const t of planEq.transferts) {
+    try {
+      const r = await api({
+        action: 'rachat',
+        acheteur_id: t.acheteur_id,
+        vendeur_id: t.vendeur_id,
+        montant_saisi: t.montant_gdes,
+        devise_saisie: 'Gourdes',
+        mode_paiement: 'Especes'
+      });
+      if (r && r.ok) faits++;
+      else echecs.push(t.acheteur + ' -> ' + t.vendeur + ' : '
+        + ((r && r.message) || 'echec'));
+    } catch (e) {
+      echecs.push(t.acheteur + ' -> ' + t.vendeur + ' : reseau');
+    }
+  }
+
+  btn.classList.remove('charge');
+  btn.disabled = false;
+  vibrer([18, 60, 18]);
+
+  await chargerSoldes();
+  await chargerEquilibrage();
+
+  if (echecs.length) {
+    erreurGlobale(faits + ' transfert(s) enregistres, '
+      + echecs.length + ' en echec :\n' + echecs.join('\n'));
+  }
+}
+window.enregistrerTousRachats = enregistrerTousRachats;
+
+/* ============================= Historique =============================== */
+
+let histoType = 'depense';
+let histoDonnees = [];
+
+function rendreHistorique() {
+  const zone = document.getElementById('histo-liste');
+  const resume = document.getElementById('histo-resume');
+  const q = (document.getElementById('histo-recherche').value || '')
+    .toLowerCase().trim();
+
+  let lignes = histoDonnees;
+  if (q) {
+    lignes = lignes.filter(l =>
+      (l.titre || '').toLowerCase().includes(q) ||
+      (l.detail || '').toLowerCase().includes(q) ||
+      (l.lieu || '').toLowerCase().includes(q) ||
+      (l.id || '').toLowerCase().includes(q) ||
+      (l.date || '').includes(q));
+  }
+
+  const total = lignes.reduce((s, l) => s + (l.montant_gdes || 0), 0);
+  const mot = histoType === 'depense' ? 'depense'
+            : histoType === 'revenu' ? 'revenu' : 'apport';
+  resume.textContent = lignes.length + ' ' + mot + (lignes.length > 1 ? 's' : '')
+    + '  ·  ' + gdes(total);
+
+  if (!lignes.length) {
+    zone.innerHTML = '<div class="vide">' +
+      (q ? 'Aucun resultat pour cette recherche.' : 'Aucune ecriture enregistree.') +
+      '</div>';
+    return;
+  }
+
+  // regroupement par jour
+  let html = '';
+  let jourCourant = null;
+  lignes.forEach(l => {
+    if (l.date !== jourCourant) {
+      jourCourant = l.date;
+      html += `<div class="jour">${dateLisible(l.date)}</div>`;
+    }
+
+    const negatif = histoType === 'depense' || l.retrait;
+    const signe = negatif ? '-' : '+';
+    const couleur = negatif ? 'neg' : 'pos';
+
+    let puces = '';
+    if (l.urgente) puces += '<span class="puce attente">a regulariser</span> ';
+    if (l.statut && l.statut !== 'Valide' && l.statut !== 'Encaisse'
+        && l.statut !== 'Confirme' && !l.urgente) {
+      puces += `<span class="puce">${l.statut}</span> `;
+    }
+    if (l.poids) puces += `<span class="puce">${l.poids} lb</span> `;
+
+    const bas = [l.detail, l.lieu].filter(Boolean).join(' · ');
+
+    const annule = String(l.statut || '').trim() === 'Annule';
+    if (annule) puces = '<span class="puce">annulee</span> ' + puces;
+
+    const boutonAnnuler = (MOI && MOI.role === 'Admin' && !annule)
+      ? `<button class="mini-annuler"
+           onclick="annulerEcriture('${histoType}','${l.id}')">Annuler</button>`
+      : '';
+
+    html += `<div class="ligne${annule ? ' barree' : ''}">
+      <div class="g">
+        <div class="nom">${l.titre || ''}</div>
+        ${bas ? `<div class="meta">${bas}</div>` : ''}
+        <div class="meta"><span class="ref">${l.id}</span>
+          ${l.devise === 'USD' ? ' · saisi en USD' : ''}</div>
+        ${puces ? `<div style="margin-top:5px">${puces}</div>` : ''}
+        ${boutonAnnuler}
+      </div>
+      <div class="val ${couleur}">${signe} ${gdes(l.montant_gdes)}</div>
+    </div>`;
+  });
+
+  zone.innerHTML = html;
+}
+
+function dateLisible(iso) {
+  const jours = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+  const mois = ['janvier','fevrier','mars','avril','mai','juin',
+                'juillet','aout','septembre','octobre','novembre','decembre'];
+  const d = new Date(iso + 'T12:00:00');
+  if (isNaN(d.getTime())) return iso;
+  const auj = aujourdhui();
+  if (iso === auj) return "Aujourd'hui";
+  return jours[d.getDay()] + ' ' + d.getDate() + ' ' + mois[d.getMonth()];
+}
+
+async function chargerHistorique(type) {
+  histoType = type || histoType;
+  const zone = document.getElementById('histo-liste');
+  zone.innerHTML = '<div class="vide">Chargement…</div>';
+
+  let r = null;
+  try {
+    r = await api({ action: 'historique', type: histoType, limite: 200 });
+    if (r && r.ok) await cacheEcrire('histo-' + histoType, r);
+  } catch (e) {
+    r = await cacheLire('histo-' + histoType);
+  }
+
+  if (!r || !r.ok) {
+    zone.innerHTML = '<div class="vide">Hors ligne, et cet historique '
+      + "n'a pas encore ete consulte. Reconnectez-vous une fois pour le garder.</div>";
+    document.getElementById('histo-resume').textContent = '—';
+    return;
+  }
+
+  histoDonnees = r.lignes || [];
+  rendreHistorique();
+  chargerRegularisation();
+}
+
+
+/* ========================= Regularisation ============================== */
+
+let regulInfo = null;
+
+async function chargerRegularisation() {
+  const zone = document.getElementById('histo-regul');
+  if (!zone) return;
+
+  // reserve aux administrateurs, et seulement sur l'onglet Depenses
+  if (!MOI || MOI.role !== 'Admin' || histoType !== 'depense') {
+    zone.innerHTML = '';
+    return;
+  }
+
+  try {
+    regulInfo = await api({ action: 'a_regulariser' });
+  } catch (e) {
+    zone.innerHTML = '';
+    return;
+  }
+  if (!regulInfo || !regulInfo.ok || !regulInfo.lignes.length) {
+    zone.innerHTML = '';
+    return;
+  }
+
+  const n = regulInfo.lignes.length;
+
+  let action;
+  if (regulInfo.regularisable) {
+    action = `<button class="btn-regul" id="btn-regul-tout"
+                onclick="regulariserTout(this)">
+                Regulariser ${n === 1 ? 'cette depense' : `ces ${n} depenses`}
+              </button>`;
+  } else {
+    action = `<div class="bloque">
+      Caisse a ${gdes(regulInfo.solde_entreprise_gdes)}.
+      Enregistrez d'abord les apports qui couvrent le decouvert :
+      regulariser sans remettre l'argent reviendrait a effacer la dette
+      sans l'avoir payee.
+    </div>`;
+  }
+
+  zone.innerHTML = `<div class="regul">
+    <h3>${n} depense${n > 1 ? 's' : ''} a regulariser</h3>
+    <p>Argent sorti alors que la caisse ne le couvrait pas.
+       Total : <span class="total">${gdes(regulInfo.total_gdes)}</span></p>
+    ${action}
+  </div>`;
+}
+
+async function regulariserTout(btn) {
+  if (!regulInfo || !regulInfo.lignes.length) return;
+
+  const n = regulInfo.lignes.length;
+  if (!confirm('Regulariser ' + n + ' depense' + (n > 1 ? 's' : '')
+      + ' pour ' + gdes(regulInfo.total_gdes) + ' ?\n\n'
+      + 'Le drapeau sera leve et la note datee a votre nom.')) return;
+
+  btn.classList.add('charge');
+  btn.disabled = true;
+
+  let faits = 0, echecs = [];
+  for (const l of regulInfo.lignes) {
+    try {
+      const r = await api({ action: 'regulariser', id: l.id });
+      if (r && r.ok) faits++;
+      else echecs.push(l.id + ' : ' + ((r && r.message) || 'echec'));
+    } catch (e) {
+      echecs.push(l.id + ' : reseau');
+    }
+  }
+
+  btn.classList.remove('charge');
+  btn.disabled = false;
+  vibrer([18, 60, 18]);
+
+  histoDonnees = [];
+  await chargerHistorique();
+  await chargerSoldes();
+
+  if (echecs.length) {
+    erreurGlobale(faits + ' regularisee(s), ' + echecs.length
+      + ' en echec :\n' + echecs.join('\n'));
+  }
+}
+window.regulariserTout = regulariserTout;
+
+
+/* ======================== Annulation d'ecriture ========================= */
+
+async function annulerEcriture(type, id) {
+  const noms = { depense: 'cette depense', revenu: 'ce revenu',
+                 contribution: 'cet apport' };
+  const motif = prompt('Annuler ' + (noms[type] || 'cette ecriture') + ' (' + id + ') ?\n\n'
+    + "La ligne restera visible et barree, avec la trace de l'annulation.\n"
+    + 'Motif (facultatif) :');
+  if (motif === null) return;   // annule par l'utilisateur
+
+  try {
+    const r = await api({ action: 'annuler', type_ecriture: type,
+                          id: id, motif: motif });
+    if (r && r.ok) {
+      vibrer([18, 60, 18]);
+      histoDonnees = [];
+      await chargerHistorique();
+      await chargerSoldes();
+    } else {
+      erreurGlobale((r && r.message) || 'Annulation refusee.');
+    }
+  } catch (e) {
+    erreurGlobale('Annulation impossible hors ligne.');
+  }
+}
+window.annulerEcriture = annulerEcriture;
+
+/* ============================== Cloture ================================= */
+
+function moisPrecedent() {
+  const d = new Date();
+  const debut = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+  const fin   = new Date(d.getFullYear(), d.getMonth(), 0);
+  const f = (x) => x.getFullYear() + '-'
+    + String(x.getMonth() + 1).padStart(2, '0') + '-'
+    + String(x.getDate()).padStart(2, '0');
+  return { debut: f(debut), fin: f(fin) };
+}
+
+async function chargerCloture() {
+  const zone = document.getElementById('zone-cloture');
+  if (!zone) return;
+  if (!MOI || MOI.role !== 'Admin') { zone.innerHTML = ''; return; }
+
+  const p = moisPrecedent();
+  let prep = null, taux = null;
+
+  try {
+    prep = await api({ action: 'preparer_cloture', debut: p.debut, fin: p.fin });
+    taux = await api({ action: 'etat_taux' });
+  } catch (e) {
+    zone.innerHTML = '';
+    return;
+  }
+  if (!prep || !prep.ok) { zone.innerHTML = ''; return; }
+
+  let html = '<h2>Cloture mensuelle</h2>';
+
+  if (taux && taux.ok && taux.perime) {
+    html += `<div class="alerte-taux">
+      Le taux de change date du ${taux.date_effet}, soit ${taux.jours} jours.
+      Mettez a jour l'onglet Parametres avant de cloturer, sinon les
+      montants en USD seront fausses.
+    </div>`;
+  }
+
+  if (prep.deja_cloture) {
+    html += `<div class="cloture-bloc">
+      <h3>${p.debut} au ${p.fin}</h3>
+      <p style="margin:0;font-size:13px;color:var(--gris)">
+        Periode deja cloturee. Rien a faire.</p>
+    </div>`;
+    zone.innerHTML = html;
+    return;
+  }
+
+  html += `<div class="cloture-bloc">
+    <h3>Periode du ${p.debut} au ${p.fin}</h3>
+    <div class="ligne"><div class="g"><div class="nom">Revenus</div></div>
+      <div class="val pos">${gdes(prep.total_revenus_gdes)}</div></div>
+    <div class="ligne"><div class="g"><div class="nom">Depenses</div></div>
+      <div class="val neg">${gdes(prep.total_depenses_gdes)}</div></div>
+    <div class="ligne"><div class="g"><div class="nom">Profit</div></div>
+      <div class="val ${prep.profit_gdes >= 0 ? 'pos' : 'neg'}">
+        ${gdes(prep.profit_gdes)}</div></div>
+  </div>`;
+
+  html += `<div class="cloture-bloc"><h3>Soldes qui seront figes</h3>` +
+    prep.lignes.map(l => `<div class="ligne">
+      <div class="g"><div class="nom">${l.nom}</div>
+        <div class="meta">Financement ${(l.part_effective * 100).toFixed(1)}%
+          &middot; profit ${gdes(l.profit)}</div></div>
+      <div class="val ${l.solde_cloture < 0 ? 'neg' : ''}">
+        ${gdes(l.solde_cloture)}</div>
+    </div>`).join('') + `</div>`;
+
+  html += `<button class="principal" id="btn-cloturer"
+    onclick="lancerCloture(this, '${p.debut}', '${p.fin}')"
+    style="margin-bottom:24px">Cloturer definitivement ce mois</button>`;
+
+  zone.innerHTML = html;
+}
+
+async function lancerCloture(btn, debut, fin) {
+  if (!confirm('Cloturer la periode du ' + debut + ' au ' + fin + ' ?\n\n'
+    + 'Les soldes seront figes et ne pourront plus etre modifies.\n'
+    + "C'est ce qui garde l'application rapide dans la duree.")) return;
+
+  btn.classList.add('charge');
+  btn.disabled = true;
+  try {
+    const r = await api({ action: 'cloturer', type_periode: 'Mensuel',
+                          debut: debut, fin: fin });
+    if (r && r.ok) {
+      vibrer([18, 60, 18]);
+      await chargerSoldes();
+      await chargerCloture();
+    } else {
+      erreurGlobale((r && r.message) || 'Cloture refusee.');
+    }
+  } catch (e) {
+    erreurGlobale('Cloture impossible : ' + (e.message || e));
+  } finally {
+    btn.classList.remove('charge');
+    btn.disabled = false;
+  }
+}
+window.lancerCloture = lancerCloture;
+
+/* ========================= Etats financiers ============================= */
+
+let periodeEtats = 'mensuel';
+
+function lignesMontant(obj, classe) {
+  const e = Object.entries(obj || {}).sort((a, b) => b[1] - a[1]);
+  if (!e.length) return '<div class="vide" style="padding:14px">Aucun mouvement.</div>';
+  return e.map(([k, v]) => `<div class="ligne">
+    <div class="g"><div class="nom" style="font-size:14px;font-weight:500">${k}</div></div>
+    <div class="val ${classe || ''}">${gdes(v)}</div></div>`).join('');
+}
+
+async function chargerEtats() {
+  const zone = document.getElementById('etats-zone');
+  if (!zone) return;
+  zone.innerHTML = '<div class="vide">Chargement…</div>';
+
+  let e = null;
+  try {
+    e = await api({ action: 'etats_financiers', type: periodeEtats });
+    await cacheEcrire('etats-' + periodeEtats, e);
+  } catch (err) {
+    e = await cacheLire('etats-' + periodeEtats);
+  }
+  if (!e || !e.ok) {
+    zone.innerHTML = '<div class="vide">Etats indisponibles.</div>';
+    return;
+  }
+
+  const R = e.resultat, C = e.capitaux, B = e.bilan;
+  const pos = R.resultat_net >= 0;
+
+  let html = `<div class="etat">
+    <h3>Compte de resultat</h3>
+    <p class="st">Du ${e.debut} au ${e.fin} &middot; l'entreprise a-t-elle gagne de l'argent ?</p>
+
+    <div class="sect">Produits</div>
+    ${lignesMontant(R.produits, 'pos')}
+    <div class="tot"><span>Total produits</span>
+      <span class="pos">${gdes(R.total_produits)}</span></div>
+
+    <div class="sect">Charges</div>
+    ${lignesMontant(R.charges, 'neg')}
+    <div class="tot"><span>Total charges</span>
+      <span class="neg">${gdes(R.total_charges)}</span></div>
+
+    <div class="tot" style="border-top-width:3px;margin-top:14px">
+      <span>Resultat net</span>
+      <span class="grand ${pos ? 'pos' : 'neg'}">${gdes(R.resultat_net)}</span></div>
+    ${R.total_produits > 0
+      ? `<p class="st" style="margin:6px 0 0">Marge nette
+           ${(R.marge * 100).toFixed(1)}%</p>` : ''}
+    ${R.investissements > 0
+      ? `<p class="st" style="margin:8px 0 0">
+           ${gdes(R.investissements)} d'achats d'actifs sur la periode :
+           exclus des charges, ce sont des investissements. Seule leur usure
+           (${gdes(R.dotation_amortissement)}) est comptee.</p>` : ''}
+  </div>`;
+
+  html += `<div class="etat">
+    <h3>Etat des capitaux propres</h3>
+    <p class="st">Comment la part de chaque associe a evolue</p>
+
+    <div class="ligne"><div class="g"><div class="nom"
+      style="font-size:14px;font-weight:500">Apports de la periode</div></div>
+      <div class="val pos">${gdes(C.apports_periode)}</div></div>
+    ${C.rachats_periode > 0 ? `<div class="ligne"><div class="g"><div class="nom"
+      style="font-size:14px;font-weight:500">Rachats de parts</div>
+      <div class="meta">Transfert entre associes, sans effet sur la caisse</div>
+      </div><div class="val">${gdes(C.rachats_periode)}</div></div>` : ''}
+    <div class="ligne"><div class="g"><div class="nom"
+      style="font-size:14px;font-weight:500">Resultat de la periode</div></div>
+      <div class="val ${pos ? 'pos' : 'neg'}">${gdes(C.resultat_net)}</div></div>
+    <div class="tot"><span>Capitaux propres</span>
+      <span>${gdes(C.total_fin)}</span></div>
+
+    <div class="sect">Par associe</div>
+    ${C.lignes.map(l => `<div class="ligne">
+      <div class="g"><div class="nom">${l.nom}</div>
+        <div class="meta">Detient ${(l.part_reelle * 100).toFixed(1)}%
+          &middot; statutaire ${(l.part_statutaire * 100).toFixed(0)}%<br>
+          Quote-part du resultat ${gdes(l.quote_part_resultat)}</div></div>
+      <div class="val">${gdes(l.capital_fin)}</div></div>`).join('')}
+  </div>`;
+
+  html += `<div class="etat">
+    <h3>Bilan</h3>
+    <p class="st">Au ${e.fin} &middot; ce que l'entreprise possede et ce qu'elle doit</p>
+
+    <div class="sect">Actif</div>
+    <div class="ligne"><div class="g"><div class="nom"
+      style="font-size:14px;font-weight:500">Tresorerie</div></div>
+      <div class="val">${gdes(B.actif_circulant.tresorerie)}</div></div>
+    <div class="ligne"><div class="g"><div class="nom"
+      style="font-size:14px;font-weight:500">Immobilisations nettes</div>
+      <div class="meta">Brut ${gdes(B.actif_immobilise.valeur_brute)}
+        &minus; amortissements ${gdes(B.actif_immobilise.amortissements)}</div></div>
+      <div class="val">${gdes(B.actif_immobilise.valeur_nette)}</div></div>
+    <div class="tot"><span>Total actif</span>
+      <span>${gdes(B.total_actif)}</span></div>
+
+    <div class="sect">Passif</div>
+    <div class="ligne"><div class="g"><div class="nom"
+      style="font-size:14px;font-weight:500">Dettes</div>
+      ${B.passif.detail_dettes && B.passif.detail_dettes.length
+        ? `<div class="meta">${B.passif.detail_dettes.length} en cours</div>` : ''}
+      </div><div class="val">${gdes(B.passif.dettes)}</div></div>
+    <div class="ligne"><div class="g"><div class="nom"
+      style="font-size:14px;font-weight:500">Capitaux propres</div>
+      <div class="meta">Ce qui appartient aux associes</div></div>
+      <div class="val">${gdes(B.capitaux_propres)}</div></div>
+    <div class="tot"><span>Total passif</span>
+      <span>${gdes(B.total_passif)}</span></div>
+
+    <div class="${B.equilibre ? 'bilan-ok' : 'bilan-ko'}">
+      ${B.equilibre
+        ? 'Bilan equilibre : actif = passif + capitaux propres.'
+        : 'Desequilibre detecte. Verifiez les onglets Actifs et Dettes.'}
+    </div>
+  </div>`;
+
+  html += `<button class="principal" onclick="window.print()"
+    style="margin-bottom:24px">Imprimer / PDF</button>`;
+
+  zone.innerHTML = html;
+}
+
+/* ============================== Rapports ================================ */
+
+async function chargerRapport(type) {
+  const zone = document.getElementById('rapport-zone');
+  zone.innerHTML = '<div class="vide">Chargement…</div>';
+
+  let r = null;
+  try {
+    r = await api({ action: 'rapport', type });
+    await cacheEcrire('rapport-' + type, r);
+  } catch (e) {
+    r = await cacheLire('rapport-' + type);
+    if (!r) {
+      zone.innerHTML = '<div class="vide">Hors ligne, et ce rapport ' +
+        'n\'a pas encore été consulté. Reconnectez-vous une fois pour le garder.</div>';
+      return;
+    }
+  }
+  if (!r || !r.ok) { zone.innerHTML = '<div class="vide">Rapport indisponible.</div>'; return; }
+
+  const profitPos = r.profit_gdes >= 0;
+
+  let html = `
+  <div class="carte" style="padding:12px 14px">
+    <div class="meta" style="font-size:13px;color:var(--gris)">
+      Du ${r.debut} au ${r.fin}
+    </div>
+  </div>
+  <div class="chiffres">
+    <div class="chiffre"><div class="t">Revenus</div>
+      <div class="v pos">${gdes(r.total_revenus_gdes)}</div></div>
+    <div class="chiffre"><div class="t">Dépenses</div>
+      <div class="v neg">${gdes(r.total_depenses_gdes)}</div></div>
+    <div class="chiffre"><div class="t">Profit</div>
+      <div class="v ${profitPos ? 'pos' : 'neg'}">${gdes(r.profit_gdes)}</div></div>
+    <div class="chiffre"><div class="t">Poids livré</div>
+      <div class="v">${Number(r.poids_livre_total || 0).toFixed(1)} lb</div></div>
+  </div>`;
+
+  if (r.a_regulariser > 0) {
+    html += `<div class="msg err" style="display:block">
+      ${r.a_regulariser} dépense(s) urgente(s) à régulariser sur cette période.</div>`;
+  }
+
+  const objets = Object.entries(r.depenses_par_objet || {})
+    .sort((a, b) => b[1] - a[1]);
+  if (objets.length) {
+    html += `<h2 style="margin-top:18px">Dépenses par objet</h2><div class="carte">` +
+      objets.map(([k, v]) => `<div class="ligne">
+        <div class="g"><div class="nom">${k}</div></div>
+        <div class="val">${gdes(v)}</div></div>`).join('') + `</div>`;
+  }
+
+  const sources = Object.entries(r.revenus_par_source || {})
+    .sort((a, b) => b[1] - a[1]);
+  if (sources.length) {
+    html += `<h2 style="margin-top:18px">Revenus par source</h2><div class="carte">` +
+      sources.map(([k, v]) => `<div class="ligne">
+        <div class="g"><div class="nom">${k}</div></div>
+        <div class="val">${gdes(v)}</div></div>`).join('') + `</div>`;
+  }
+
+  html += `<h2 style="margin-top:18px">Répartition du profit</h2><div class="carte">` +
+    (r.repartition || []).map(a => {
+      const n = a.part_profit_gdes < 0;
+      return `<div class="ligne">
+        <div class="g"><div class="nom">${a.nom}</div>
+          <div class="meta">Financement ${(a.part_effective * 100).toFixed(1)}% ·
+            statut ${(a.part * 100).toFixed(0)}% · solde ${gdes(a.solde_gdes)}</div></div>
+        <div class="val ${n ? 'neg' : 'pos'}">${gdes(a.part_profit_gdes)}</div></div>`;
+    }).join('') + `</div>`;
+
+  html += `<button class="principal" onclick="window.print()"
+    style="margin-bottom:24px">Imprimer / PDF</button>`;
+
+  zone.innerHTML = html;
+}
+
+
+/* ============================ Connexion ================================= */
+
+const CLE_CODE = 'flashipping_code';
+const CLE_MOI  = 'flashipping_moi';
+
+function memoriser(cle, val) {
+  try { localStorage.setItem(cle, val); } catch (e) {}
+}
+function relire(cle) {
+  try { return localStorage.getItem(cle) || ''; } catch (e) { return ''; }
+}
+function oublier() {
+  try { localStorage.removeItem(CLE_CODE); localStorage.removeItem(CLE_MOI); }
+  catch (e) {}
+}
+
+function afficherEcranConnexion(montrer) {
+  const el = document.getElementById('ecran-connexion');
+  if (el) el.classList.toggle('masque', !montrer);
+}
+
+function appliquerIdentite() {
+  const el = document.getElementById('qui-nom');
+  if (el && MOI) {
+    el.textContent = MOI.nom + (MOI.role === 'Admin' ? ' · admin' : ' · agent');
+  }
+  // un agent ne voit ni les soldes des associes ni les rapports
+  const reserve = ['v-soldes', 'v-rapport'];
+  document.querySelectorAll('nav button').forEach(b => {
+    if (reserve.indexOf(b.dataset.v) !== -1) {
+      b.style.display = (MOI && MOI.role === 'Admin') ? '' : 'none';
+    }
+  });
+}
+
+async function connecter(code, garder) {
+  CODE = String(code || '').trim();
+  if (!CODE) {
+    afficher('cx-msg', 'err', 'Entrez votre code.');
+    return false;
+  }
+
+  let rep;
+  try {
+    rep = await api({ action: 'login' });
+  } catch (e) {
+    // hors ligne : on accepte un code deja valide sur ce telephone
+    if (relire(CLE_CODE) === CODE) {
+      try { MOI = JSON.parse(relire(CLE_MOI)); } catch (x) { MOI = null; }
+      if (MOI) {
+        afficherEcranConnexion(false);
+        appliquerIdentite();
+        return true;
+      }
+    }
+    afficher('cx-msg', 'err',
+      'Pas de reseau. La premiere connexion doit se faire en ligne.');
+    CODE = '';
+    return false;
+  }
+
+  if (!rep || !rep.ok) {
+    afficher('cx-msg', 'err', (rep && rep.message) || 'Code refuse.');
+    CODE = '';
+    vibrer(220);
+    return false;
+  }
+
+  MOI = rep.utilisateur;
+  if (garder) {
+    memoriser(CLE_CODE, CODE);
+    memoriser(CLE_MOI, JSON.stringify(MOI));
+  } else {
+    oublier();
+  }
+
+  afficherEcranConnexion(false);
+  appliquerIdentite();
+  vibrer(18);
+  return true;
+}
+
+function deconnecter() {
+  oublier();
+  CODE = '';
+  MOI = null;
+  histoDonnees = [];
+  const c = document.getElementById('cx-code');
+  if (c) c.value = '';
+  afficherEcranConnexion(true);
+}
+
+/* -------- Bouton Entrer : fonction globale, appelee par onclick --------
+   Volontairement independante du demarrage : meme si une autre partie
+   de l'app echoue, la connexion reste possible.                        */
+async function seConnecter(btn) {
+  var msg = document.getElementById('cx-msg');
+  try {
+    if (btn) { btn.classList.add('charge'); btn.disabled = true; }
+
+    // la base locale peut ne pas etre prete si le demarrage a echoue
+    if (!db) { try { await ouvrirDB(); } catch (e) { db = null; } }
+
+    var champ = document.getElementById('cx-code');
+    var garder = (document.getElementById('cx-garder') || {}).checked !== false;
+    var ok = await connecter(champ ? champ.value : '', garder);
+    if (ok) await chargerApresConnexion();
+
+  } catch (e) {
+    if (msg) {
+      msg.className = 'msg err';
+      msg.textContent = 'Erreur : ' + (e && e.message ? e.message : e);
+    }
+  } finally {
+    if (btn) { btn.classList.remove('charge'); btn.disabled = false; }
+  }
+}
+window.seConnecter = seConnecter;
+
+/* ============================ Initialisation ============================ */
+
+/* --- Branchement de l'interface : SYNCHRONE, aucune dependance reseau/DB --- */
+function brancherUI() {
+  ['d-date', 'r-date', 'c-date'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.value = aujourdhui();
+  });
+
+  // navigation entre les vues
+  document.querySelectorAll('nav button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('nav button').forEach(x => x.classList.remove('on'));
+      document.querySelectorAll('section').forEach(x => x.classList.remove('actif'));
+      b.classList.add('on');
+      const vue = document.getElementById(b.dataset.v);
+      if (vue) vue.classList.add('actif');
+      window.scrollTo(0, 0);
+      if (b.dataset.v === 'v-soldes') { chargerSoldes(); chargerEquilibrage(); }
+      if (b.dataset.v === 'v-histo' && !histoDonnees.length) chargerHistorique();
+      if (b.dataset.v === 'v-rapport') chargerCloture();
+    });
+  });
+
+  // bascules de devise
+  brancherBascule('d-devise', () => apercuConversion('d-montant', 'd-devise', 'd-apercu'));
+  brancherBascule('r-devise', () => apercuConversion('r-montant', 'r-devise', 'r-apercu'));
+  brancherBascule('c-devise', () => apercuConversion('c-montant', 'c-devise', 'c-apercu'));
+
+  on('d-actif', 'change', function (e) {
+    var z = document.getElementById('d-actif-champs');
+    if (z) z.style.display = e.target.checked ? 'block' : 'none';
+  });
+
+  on('d-montant', 'input', () => apercuConversion('d-montant', 'd-devise', 'd-apercu'));
+  on('r-montant', 'input', () => apercuConversion('r-montant', 'r-devise', 'r-apercu'));
+  on('c-montant', 'input', () => apercuConversion('c-montant', 'c-devise', 'c-apercu'));
+
+  // ---- depense ----
+  on('d-envoyer', 'click', async (ev) => {
+    const btn = ev.currentTarget;
+    const sel = document.getElementById('d-objet');
+    const opt = sel.options[sel.selectedIndex];
+    const montant = parseFloat(document.getElementById('d-montant').value);
+    if (!montant || montant <= 0) {
+      afficher('msg-dep', 'err', 'Indiquez un montant superieur a zero.'); return;
+    }
+    try {
+      await soumettre('depense', {
+        date: document.getElementById('d-date').value,
+        objet: sel.value,
+        categorie: opt ? opt.dataset.cat : '',
+        description: document.getElementById('d-desc').value,
+        agence_id: document.getElementById('d-agence').value,
+        montant_saisi: montant,
+        devise_saisie: deviseActive('d-devise'),
+        urgente_hors_solde: document.getElementById('d-urgente').checked ? 'Oui' : 'Non',
+        est_actif: document.getElementById('d-actif').checked ? 'Oui' : 'Non',
+        categorie_actif: valeur('d-actif-cat'),
+        duree_mois: parseFloat(valeur('d-duree')) || 0,
+        valeur_residuelle: parseFloat(valeur('d-residuelle')) || 0
+      }, 'msg-dep', () => {
+        document.getElementById('d-montant').value = '';
+        document.getElementById('d-desc').value = '';
+        document.getElementById('d-urgente').checked = false;
+        var ca = document.getElementById('d-actif');
+        if (ca) { ca.checked = false; }
+        var cz = document.getElementById('d-actif-champs');
+        if (cz) cz.style.display = 'none';
+        document.getElementById('d-apercu').textContent =
+          'Saisissez un montant pour voir la conversion.';
+      }, btn);
+    } catch (e) {
+      afficher('msg-dep', 'err', String(e.message || e));
+    }
+  });
+
+  // ---- revenu ----
+  on('r-envoyer', 'click', async (ev) => {
+    const btn = ev.currentTarget;
+    const montant = parseFloat(document.getElementById('r-montant').value);
+    if (!montant || montant <= 0) {
+      afficher('msg-rev', 'err', 'Indiquez un montant superieur a zero.'); return;
+    }
+    try {
+      await soumettre('revenu', {
+        date: document.getElementById('r-date').value,
+        source: document.getElementById('r-source').value,
+        agence_id: document.getElementById('r-agence').value,
+        client: document.getElementById('r-client').value,
+        description: document.getElementById('r-desc').value,
+        montant_saisi: montant,
+        devise_saisie: deviseActive('r-devise'),
+        poids_livre: parseFloat(document.getElementById('r-poids').value) || 0,
+        statut: 'Encaisse'
+      }, 'msg-rev', () => {
+        document.getElementById('r-montant').value = '';
+        document.getElementById('r-poids').value = '';
+        document.getElementById('r-client').value = '';
+        document.getElementById('r-desc').value = '';
+        document.getElementById('r-apercu').textContent =
+          'Saisissez un montant pour voir la conversion.';
+      }, btn);
+    } catch (e) {
+      afficher('msg-rev', 'err', String(e.message || e));
+    }
+  });
+
+  // ---- contribution ----
+  on('c-envoyer', 'click', async (ev) => {
+    const btn = ev.currentTarget;
+    const montant = parseFloat(document.getElementById('c-montant').value);
+    if (!montant || montant <= 0) {
+      afficher('msg-ctr', 'err', 'Indiquez un montant superieur a zero.'); return;
+    }
+    try {
+      await soumettre('contribution', {
+        date: document.getElementById('c-date').value,
+        associe_id: document.getElementById('c-associe').value,
+        type_contribution: document.getElementById('c-type').value,
+        montant_saisi: montant,
+        devise_saisie: deviseActive('c-devise'),
+        mode_paiement: document.getElementById('c-mode').value,
+        reference: document.getElementById('c-ref').value,
+        statut: 'Confirme'
+      }, 'msg-ctr', () => {
+        document.getElementById('c-montant').value = '';
+        document.getElementById('c-ref').value = '';
+        document.getElementById('c-apercu').textContent =
+          'Saisissez un montant pour voir la conversion.';
+      }, btn);
+    } catch (e) {
+      afficher('msg-ctr', 'err', String(e.message || e));
+    }
+  });
+
+  on('s-rafraichir', 'click', async (ev) => {
+    const b = ev.currentTarget;
+    b.classList.add('charge'); b.disabled = true;
+    vibrer(12);
+    try { await chargerSoldes(); }
+    finally { b.classList.remove('charge'); b.disabled = false; }
+  });
+
+  // historique : onglets Depenses / Revenus / Apports
+  document.querySelectorAll('#histo-onglets button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('#histo-onglets button')
+        .forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      document.getElementById('histo-recherche').value = '';
+      vibrer(10);
+      chargerHistorique(b.dataset.t);
+    });
+  });
+
+  on('histo-recherche', 'input', rendreHistorique);
+
+  on('histo-actualiser', 'click', async (ev) => {
+    const b = ev.currentTarget;
+    b.classList.add('charge'); b.disabled = true;
+    vibrer(12);
+    try { await chargerHistorique(); }
+    finally { b.classList.remove('charge'); b.disabled = false; }
+  });
+
+  // bascule Synthese / Etats financiers
+  document.querySelectorAll('#vue-rapport button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('#vue-rapport button')
+        .forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      const etats = b.dataset.vue === 'etats';
+      document.getElementById('rapport-zone').style.display = etats ? 'none' : '';
+      document.getElementById('etats-zone').style.display = etats ? '' : 'none';
+      const zc = document.getElementById('zone-cloture');
+      if (zc) zc.style.display = etats ? 'none' : '';
+      vibrer(10);
+      if (etats) chargerEtats();
+    });
+  });
+
+  // rapports
+  document.querySelectorAll('#periodes button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('#periodes button').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      periodeEtats = b.dataset.p;
+      const vueEtats = document.querySelector('#vue-rapport button.on');
+      if (vueEtats && vueEtats.dataset.vue === 'etats') chargerEtats();
+      else { chargerRapport(b.dataset.p); chargerCloture(); }
+    });
+  });
+
+  window.addEventListener('online', async () => { await majReseau(); synchroniser(); });
+  window.addEventListener('offline', majReseau);
+}
+
+/* --- Chargement des donnees : chaque etape isolee, un echec n'arrete rien --- */
+async function init() {
+  brancherUI();                       // 1. l'interface repond TOUJOURS
+
+  try { await ouvrirDB(); }           // 2. IndexedDB facultatif
+  catch (e) { db = null; }
+
+  try { await demarrerSession(); }
+  catch (e) { erreurGlobale('connexion : ' + e.message); afficherEcranConnexion(true); }
+
+  setInterval(() => { if (CODE) synchroniser().catch(() => {}); }, 60000);
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js?v=15').catch(() => {});
+  }
+}
+
+/* ---- connexion : cablage et reprise de session ---- */
+async function demarrerSession() {
+  // le bouton Entrer est branche par onclick dans le HTML
+
+  on('cx-code', 'keydown', (e) => {
+    if (e.key === 'Enter') {
+      const b = document.getElementById('cx-entrer');
+      if (b) b.click();
+    }
+  });
+
+  on('qui-sortir', 'click', () => {
+    if (confirm('Se deconnecter de ce telephone ?')) deconnecter();
+  });
+
+  // reprise automatique si un code a deja ete valide ici
+  const memo = relire(CLE_CODE);
+  if (memo) {
+    const ok = await connecter(memo, true);
+    if (ok) { await chargerApresConnexion(); return; }
+  }
+  afficherEcranConnexion(true);
+}
+
+async function chargerApresConnexion() {
+  try { await majReseau(); }          catch (e) {}
+  try { await chargerReference(); }   catch (e) { erreurGlobale('reference : ' + e.message); }
+  if (MOI && MOI.role === 'Admin') {
+    try { await chargerSoldes(); }    catch (e) { erreurGlobale('soldes : ' + e.message); }
+  }
+  try { await synchroniser(); }       catch (e) {}
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+</script>
+</body>
+</html>
