@@ -374,7 +374,7 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
     <button class="principal" id="cx-entrer" type="button"
             onclick="seConnecter(this)">Entrer</button>
     <p class="cx-note">Ce code identifie vos saisies. Ne le partagez pas.<br>
-      <span id="cx-version" style="opacity:.6">version 15</span></p>
+      <span id="cx-version" style="opacity:.6">version 16</span></p>
   </div>
 </div>
 
@@ -586,6 +586,58 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
     <button class="principal" id="s-rafraichir">Actualiser</button>
 
     <div id="zone-equilibrage" style="margin-top:26px"></div>
+
+    <div style="margin-top:26px">
+      <h2>Dettes &amp; emprunts</h2>
+      <div id="zone-dettes"></div>
+
+      <div class="carte" id="form-dette" style="display:none">
+        <label for="dt-type">Type</label>
+        <select id="dt-type">
+          <option>Emprunt bancaire</option>
+          <option>Emprunt particulier</option>
+          <option>Dette fournisseur</option>
+          <option>Avance associe</option>
+          <option>Autre</option>
+        </select>
+
+        <label for="dt-creancier">Créancier (à qui vous devez)</label>
+        <input type="text" id="dt-creancier" placeholder="Nom de la banque ou personne">
+
+        <div class="paire">
+          <div>
+            <label for="dt-montant">Montant reçu</label>
+            <input type="number" id="dt-montant" inputmode="decimal" step="0.01">
+          </div>
+          <div class="etroit">
+            <label>Devise</label>
+            <div class="bascule" id="dt-devise">
+              <button type="button" class="on" data-v="Gourdes">Gdes</button>
+              <button type="button" data-v="USD">USD</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="paire">
+          <div>
+            <label for="dt-taux">Taux d'intérêt (%)</label>
+            <input type="number" id="dt-taux" inputmode="decimal" step="0.01" value="0">
+          </div>
+          <div>
+            <label for="dt-echeance">Échéance</label>
+            <input type="date" id="dt-echeance">
+          </div>
+        </div>
+
+        <div class="apercu">
+          L'argent entre en trésorerie, mais ce n'est pas un revenu :
+          aucun profit n'est créé et les parts des associés ne bougent pas.
+        </div>
+
+        <button class="principal" onclick="enregistrerDette(this)">
+          Enregistrer l'emprunt</button>
+      </div>
+    </div>
   </section>
 
   <!-- ============ HISTORIQUE ============ -->
@@ -1615,6 +1667,147 @@ async function lancerCloture(btn, debut, fin) {
 }
 window.lancerCloture = lancerCloture;
 
+/* ============================== Dettes ================================= */
+
+let listeDettes = null;
+
+async function chargerDettes() {
+  const zone = document.getElementById('zone-dettes');
+  if (!zone) return;
+  if (!MOI || MOI.role !== 'Admin') {
+    zone.innerHTML = '';
+    const f = document.getElementById('form-dette');
+    if (f) f.style.display = 'none';
+    return;
+  }
+
+  try {
+    listeDettes = await api({ action: 'dettes' });
+  } catch (e) { zone.innerHTML = ''; return; }
+  if (!listeDettes || !listeDettes.ok) { zone.innerHTML = ''; return; }
+
+  const enCours = (listeDettes.lignes || []).filter(d => d.solde_du > 0.01);
+
+  let html = '';
+
+  if (enCours.length) {
+    html += `<div class="eq-bloc">
+      <h3>Total du : ${gdes(listeDettes.total_du)}</h3>
+      <p class="expl">
+        Emprunte ${gdes(listeDettes.total_emprunte)} &middot;
+        rembourse ${gdes(listeDettes.total_rembourse)}.
+        Ces sommes ne vous appartiennent pas : elles sont deduites
+        des capitaux propres au bilan.
+      </p>` +
+      enCours.map(d => `<div class="ligne">
+        <div class="g">
+          <div class="nom">${d.creancier || d.type}</div>
+          <div class="meta">${d.dette_id} &middot; ${d.type}
+            &middot; contracte le ${d.date_contrat}
+            ${d.echeance ? ' &middot; echeance ' + d.echeance : ''}
+            ${d.taux_interet > 0 ? ' &middot; ' + d.taux_interet + '%' : ''}<br>
+            Initial ${gdes(d.montant_initial)} &middot;
+            rembourse ${gdes(d.rembourse)}</div>
+          <button class="mini-annuler" style="color:var(--encre-clair)"
+            onclick="rembourser('${d.dette_id}', ${d.solde_du})">
+            Rembourser</button>
+        </div>
+        <div class="val neg">${gdes(d.solde_du)}</div>
+      </div>`).join('') + `</div>`;
+  } else {
+    html += `<div class="eq-bloc">
+      <h3>Aucune dette en cours</h3>
+      <p class="expl" style="margin:0">
+        L'entreprise ne doit rien a personne.</p>
+    </div>`;
+  }
+
+  html += `<button class="principal" onclick="basculerFormDette()"
+    style="margin-bottom:14px">Enregistrer un emprunt</button>`;
+
+  zone.innerHTML = html;
+}
+
+function basculerFormDette() {
+  const f = document.getElementById('form-dette');
+  if (!f) return;
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  if (f.style.display === 'block') f.scrollIntoView({ behavior: 'smooth' });
+}
+window.basculerFormDette = basculerFormDette;
+
+async function enregistrerDette(btn) {
+  const montant = parseFloat(valeur('dt-montant'));
+  if (!montant || montant <= 0) {
+    erreurGlobale('Indiquez le montant recu.');
+    return;
+  }
+  const creancier = valeur('dt-creancier').trim();
+  if (!creancier) {
+    erreurGlobale('Indiquez a qui vous devez cet argent.');
+    return;
+  }
+
+  const dev = (document.querySelector('#dt-devise button.on') || {}).dataset;
+  if (!confirm('Enregistrer un emprunt de ' + montant + ' '
+    + ((dev && dev.v) || 'Gourdes') + ' aupres de ' + creancier + ' ?\n\n'
+    + "La tresorerie augmentera, mais ce n'est pas un revenu :\n"
+    + 'aucun profit ne sera cree.')) return;
+
+  btn.classList.add('charge'); btn.disabled = true;
+  try {
+    const r = await api({ action: 'ajouter_dette', data: {
+      type_dette: valeur('dt-type'),
+      creancier: creancier,
+      montant_saisi: montant,
+      devise_saisie: (dev && dev.v) || 'Gourdes',
+      taux_interet: parseFloat(valeur('dt-taux')) || 0,
+      echeance: valeur('dt-echeance')
+    }});
+    if (r && r.ok) {
+      vibrer([18, 60, 18]);
+      document.getElementById('dt-montant').value = '';
+      document.getElementById('dt-creancier').value = '';
+      document.getElementById('form-dette').style.display = 'none';
+      await chargerSoldes();
+      await chargerDettes();
+    } else {
+      erreurGlobale((r && r.message) || 'Enregistrement refuse.');
+    }
+  } catch (e) {
+    erreurGlobale('Enregistrement impossible hors ligne.');
+  } finally {
+    btn.classList.remove('charge'); btn.disabled = false;
+  }
+}
+window.enregistrerDette = enregistrerDette;
+
+async function rembourser(detteId, soldeDu) {
+  const saisi = prompt('Remboursement de ' + detteId + '\n\n'
+    + 'Reste du : ' + gdes(soldeDu) + '\n\n'
+    + 'Montant a rembourser (gourdes) :');
+  if (saisi === null) return;
+
+  const m = parseFloat(String(saisi).replace(',', '.'));
+  if (!m || m <= 0) { erreurGlobale('Montant invalide.'); return; }
+
+  try {
+    const r = await api({ action: 'rembourser_dette', data: {
+      dette_id: detteId, montant_saisi: m, devise_saisie: 'Gourdes'
+    }});
+    if (r && r.ok) {
+      vibrer([18, 60, 18]);
+      await chargerSoldes();
+      await chargerDettes();
+    } else {
+      erreurGlobale((r && r.message) || 'Remboursement refuse.');
+    }
+  } catch (e) {
+    erreurGlobale('Remboursement impossible hors ligne.');
+  }
+}
+window.rembourser = rembourser;
+
 /* ========================= Etats financiers ============================= */
 
 let periodeEtats = 'mensuel';
@@ -1958,7 +2151,9 @@ function brancherUI() {
       const vue = document.getElementById(b.dataset.v);
       if (vue) vue.classList.add('actif');
       window.scrollTo(0, 0);
-      if (b.dataset.v === 'v-soldes') { chargerSoldes(); chargerEquilibrage(); }
+      if (b.dataset.v === 'v-soldes') {
+        chargerSoldes(); chargerEquilibrage(); chargerDettes();
+      }
       if (b.dataset.v === 'v-histo' && !histoDonnees.length) chargerHistorique();
       if (b.dataset.v === 'v-rapport') chargerCloture();
     });
@@ -1968,6 +2163,7 @@ function brancherUI() {
   brancherBascule('d-devise', () => apercuConversion('d-montant', 'd-devise', 'd-apercu'));
   brancherBascule('r-devise', () => apercuConversion('r-montant', 'r-devise', 'r-apercu'));
   brancherBascule('c-devise', () => apercuConversion('c-montant', 'c-devise', 'c-apercu'));
+  brancherBascule('dt-devise');
 
   on('d-actif', 'change', function (e) {
     var z = document.getElementById('d-actif-champs');
@@ -2151,7 +2347,7 @@ async function init() {
   setInterval(() => { if (CODE) synchroniser().catch(() => {}); }, 60000);
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js?v=15').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=16').catch(() => {});
   }
 }
 
