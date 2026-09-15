@@ -374,7 +374,7 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
     <button class="principal" id="cx-entrer" type="button"
             onclick="seConnecter(this)">Entrer</button>
     <p class="cx-note">Ce code identifie vos saisies. Ne le partagez pas.<br>
-      <span id="cx-version" style="opacity:.6">version 16</span></p>
+      <span id="cx-version" style="opacity:.6">version 19</span></p>
   </div>
 </div>
 
@@ -541,15 +541,17 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
         <option>Apport Initial</option>
         <option>Regularisation</option>
         <option>Retrait</option>
+        <option>Apport en nature</option>
         <option>Rachat de parts</option>
         <option>Cession de parts</option>
+        <option>Apport en nature</option>
         <option>Rachat de parts</option>
         <option>Cession de parts</option>
       </select>
 
       <div class="paire">
         <div>
-          <label for="c-montant">Montant</label>
+          <label for="c-montant" id="c-montant-label">Montant</label>
           <input type="number" id="c-montant" inputmode="decimal" step="0.01" placeholder="0.00">
         </div>
         <div class="etroit">
@@ -558,6 +560,36 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
             <button type="button" class="on" data-v="Gourdes">Gdes</button>
             <button type="button" data-v="USD">USD</button>
           </div>
+        </div>
+      </div>
+
+      <div id="c-nature-champs" style="display:none">
+        <label for="c-nat-designation">Bien apporté</label>
+        <input type="text" id="c-nat-designation"
+               placeholder="Ex : téléphone Samsung A15">
+
+        <label for="c-nat-cat">Catégorie</label>
+        <select id="c-nat-cat">
+          <option>Informatique</option><option>Materiel</option>
+          <option>Vehicule</option><option>Mobilier</option>
+          <option>Amenagement</option><option>Autre</option>
+        </select>
+
+        <div class="paire">
+          <div>
+            <label for="c-nat-duree">Durée de vie (mois)</label>
+            <input type="number" id="c-nat-duree" inputmode="numeric" value="36">
+          </div>
+          <div>
+            <label for="c-nat-residuelle">Valeur en fin de vie</label>
+            <input type="number" id="c-nat-residuelle" inputmode="decimal" value="0">
+          </div>
+        </div>
+
+        <div class="apercu">
+          Le bien entre au bilan et l'associé est crédité de sa valeur.
+          <b>Aucun cash ne circule</b> : la trésorerie ne change pas.
+          Téléphone 36 mois &middot; ordinateur 36 &middot; moto 60 &middot; mobilier 120.
         </div>
       </div>
 
@@ -584,6 +616,22 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
       <div class="vide">Chargement…</div>
     </div>
     <button class="principal" id="s-rafraichir">Actualiser</button>
+
+    <div style="margin-top:26px">
+      <h2>Rapprochement de caisse</h2>
+      <div class="eq-bloc">
+        <p class="expl">
+          Comptez l'argent réellement présent, puis comparez.
+          Un écart révèle une dépense oubliée ou un revenu pas encore encaissé.
+          Le nommer vaut mieux que le laisser grandir.
+        </p>
+        <label for="rc-montant">Cash réellement compté (gourdes)</label>
+        <input type="number" id="rc-montant" inputmode="decimal" step="0.01"
+               placeholder="0.00">
+        <button class="principal" onclick="comparerCaisse(this)">Comparer</button>
+        <div id="rc-resultat"></div>
+      </div>
+    </div>
 
     <div id="zone-equilibrage" style="margin-top:26px"></div>
 
@@ -1138,9 +1186,14 @@ async function chargerSoldes() {
 
   const zv = document.getElementById('valeur-ent');
   if (zv) {
-    if (s.actifs_nets_gdes > 0) {
-      zv.innerHTML = 'Valeur de l\'entreprise <b>' + gdes(s.valeur_entreprise_gdes)
-        + '</b><br>tresorerie + actifs nets ' + gdes(s.actifs_nets_gdes);
+    if (s.actifs_nets_gdes > 0 || s.flux_dette_gdes) {
+      let d = 'Valeur de l\'entreprise <b>' + gdes(s.valeur_entreprise_gdes) + '</b>';
+      if (s.actifs_nets_gdes > 0) d += '<br>actifs nets ' + gdes(s.actifs_nets_gdes);
+      if (s.apports_nature_gdes > 0) d += ' &middot; dont apports en nature '
+        + gdes(s.apports_nature_gdes);
+      if (s.flux_dette_gdes > 0) d += '<br>dont ' + gdes(s.flux_dette_gdes)
+        + ' d\'emprunt a rembourser';
+      zv.innerHTML = d;
     } else {
       zv.textContent = '';
     }
@@ -1188,6 +1241,139 @@ async function chargerSoldes() {
   }
 }
 
+
+
+
+/* --- Clotures existantes et annulation --- */
+async function chargerListeClotures(zone) {
+  let r = null;
+  try { r = await api({ action: 'clotures' }); } catch (e) { return; }
+  if (!r || !r.ok || !r.periodes.length) return;
+
+  const validees = r.periodes.filter(p => p.statut === 'Validee');
+  if (!validees.length) return;
+
+  const bloc = document.createElement('div');
+  bloc.className = 'cloture-bloc';
+  bloc.style.marginBottom = '24px';
+  bloc.innerHTML = `<h3>Clotures enregistrees</h3>` +
+    validees.map(p => `<div class="ligne">
+      <div class="g">
+        <div class="nom">${p.debut} au ${p.fin}</div>
+        <div class="meta">${p.type_periode} &middot; ${p.nb_lignes} associe(s)
+          &middot; validee le ${p.date_validation}</div>
+        <button class="mini-annuler"
+          onclick="annulerCloture('${p.debut}','${p.fin}')">
+          Annuler cette cloture</button>
+      </div>
+      <div class="val">${gdes(p.total_solde_gdes)}</div>
+    </div>`).join('');
+  zone.appendChild(bloc);
+}
+
+async function annulerCloture(debut, fin) {
+  if (!confirm('Annuler la cloture du ' + debut + ' au ' + fin + ' ?\n\n'
+    + 'Les soldes repartiront de la cloture precedente.\n'
+    + 'Les lignes ne sont pas supprimees : elles passent en Annule.')) return;
+
+  try {
+    const r = await api({ action: 'annuler_cloture', debut: debut, fin: fin });
+    if (r && r.ok) {
+      vibrer([18, 60, 18]);
+      await chargerSoldes();
+      await chargerCloture();
+    } else {
+      erreurGlobale((r && r.message) || 'Annulation refusee.');
+    }
+  } catch (e) {
+    erreurGlobale('Annulation impossible hors ligne.');
+  }
+}
+window.annulerCloture = annulerCloture;
+
+/* ======================= Rapprochement de caisse ======================== */
+
+let ecartCaisse = null;
+
+async function comparerCaisse(btn) {
+  const m = parseFloat(valeur('rc-montant'));
+  if (isNaN(m) || m < 0) { erreurGlobale('Indiquez le montant compte.'); return; }
+
+  btn.classList.add('charge'); btn.disabled = true;
+  const zone = document.getElementById('rc-resultat');
+  try {
+    ecartCaisse = await api({ action: 'rapprochement', montant: m });
+    if (!ecartCaisse || !ecartCaisse.ok) {
+      erreurGlobale('Comparaison impossible.'); return;
+    }
+
+    const e = ecartCaisse;
+    if (!e.significatif) {
+      zone.innerHTML = `<div class="bilan-ok" style="margin-top:12px">
+        Caisse exacte. Le solde theorique correspond au cash compte.</div>`;
+      vibrer(18);
+      return;
+    }
+
+    const manquant = e.ecart_gdes < 0;
+    zone.innerHTML = `<div class="${manquant ? 'bilan-ko' : 'bilan-ok'}"
+      style="margin-top:12px">
+      <b>${manquant ? 'Manquant' : 'Excedent'} de
+        ${gdes(Math.abs(e.ecart_gdes))}</b><br>
+      Theorique ${gdes(e.theorique_gdes)} &middot; compte ${gdes(e.compte_gdes)}
+    </div>
+    <p class="expl" style="margin:10px 0">
+      ${manquant
+        ? "Avant d'enregistrer, cherchez la cause : une depense non saisie, "
+          + 'un retrait oublie, une erreur de montant. Enregistrer un manquant '
+          + 'sans le comprendre revient a effacer le probleme.'
+        : 'Un excedent vient souvent d\'un revenu encaisse mais pas saisi. '
+          + 'Verifiez avant d\'enregistrer.'}
+    </p>
+    <label for="rc-motif">Cause constatee</label>
+    <input type="text" id="rc-motif" placeholder="Ex : course moto du 12 non saisie">
+    <button class="principal" onclick="validerEcartCaisse(this)">
+      Enregistrer cet ecart</button>`;
+    vibrer(220);
+  } catch (err) {
+    erreurGlobale('Comparaison impossible hors ligne.');
+  } finally {
+    btn.classList.remove('charge'); btn.disabled = false;
+  }
+}
+window.comparerCaisse = comparerCaisse;
+
+async function validerEcartCaisse(btn) {
+  if (!ecartCaisse) return;
+  const motif = valeur('rc-motif').trim();
+  if (!motif) { erreurGlobale('Indiquez la cause de l\'ecart.'); return; }
+
+  if (!confirm('Enregistrer un ecart de '
+    + gdes(Math.abs(ecartCaisse.ecart_gdes)) + ' ?\n\n'
+    + 'Il sera reparti entre les associes comme tout resultat.')) return;
+
+  btn.classList.add('charge'); btn.disabled = true;
+  try {
+    const r = await api({ action: 'regulariser_caisse',
+                          montant: ecartCaisse.compte_gdes, motif: motif });
+    if (r && r.ok) {
+      vibrer([18, 60, 18]);
+      document.getElementById('rc-montant').value = '';
+      document.getElementById('rc-resultat').innerHTML =
+        `<div class="bilan-ok" style="margin-top:12px">${r.message}</div>`;
+      ecartCaisse = null;
+      histoDonnees = [];
+      await chargerSoldes();
+    } else {
+      erreurGlobale((r && r.message) || 'Enregistrement refuse.');
+    }
+  } catch (e) {
+    erreurGlobale('Enregistrement impossible hors ligne.');
+  } finally {
+    btn.classList.remove('charge'); btn.disabled = false;
+  }
+}
+window.validerEcartCaisse = validerEcartCaisse;
 
 /* ========================= Equilibrage des parts ======================== */
 
@@ -1610,8 +1796,6 @@ async function chargerCloture() {
       <p style="margin:0;font-size:13px;color:var(--gris)">
         Periode deja cloturee. Rien a faire.</p>
     </div>`;
-    zone.innerHTML = html;
-    return;
   }
 
   html += `<div class="cloture-bloc">
@@ -1634,14 +1818,48 @@ async function chargerCloture() {
         ${gdes(l.solde_cloture)}</div>
     </div>`).join('') + `</div>`;
 
-  html += `<button class="principal" id="btn-cloturer"
-    onclick="lancerCloture(this, '${p.debut}', '${p.fin}')"
-    style="margin-bottom:24px">Cloturer definitivement ce mois</button>`;
+  if (!prep.deja_cloture) {
+    html += `<button class="principal" id="btn-cloturer"
+      onclick="lancerCloture(this, '${p.debut}', '${p.fin}', 'Mensuel')">
+      Cloturer definitivement ce mois</button>`;
+  }
+
+  html += `
+
+    <div class="cloture-bloc" style="margin-top:14px">
+      <h3>Cloture a la demande</h3>
+      <p class="expl" style="font-size:13px;color:var(--gris);margin:0 0 10px">
+        Pour figer les soldes avant la fin du mois, par exemple avant un
+        rachat de parts. Les cloture s'enchainent : chacune repart de la
+        precedente, rien n'est compte deux fois.
+      </p>
+      <div class="paire">
+        <div>
+          <label for="cl-debut">Du</label>
+          <input type="date" id="cl-debut">
+        </div>
+        <div>
+          <label for="cl-fin">Au</label>
+          <input type="date" id="cl-fin">
+        </div>
+      </div>
+      <label for="cl-type">Type de periode</label>
+      <select id="cl-type">
+        <option>Hebdomadaire</option>
+        <option selected>Mensuel</option>
+        <option>Trimestriel</option>
+        <option>Semestriel</option>
+        <option>Annuel</option>
+      </select>
+      <button class="principal" onclick="clotureLibre(this)">
+        Cloturer cette periode</button>
+    </div>`;
 
   zone.innerHTML = html;
+  chargerListeClotures(zone);
 }
 
-async function lancerCloture(btn, debut, fin) {
+async function lancerCloture(btn, debut, fin, typePeriode) {
   if (!confirm('Cloturer la periode du ' + debut + ' au ' + fin + ' ?\n\n'
     + 'Les soldes seront figes et ne pourront plus etre modifies.\n'
     + "C'est ce qui garde l'application rapide dans la duree.")) return;
@@ -1649,7 +1867,8 @@ async function lancerCloture(btn, debut, fin) {
   btn.classList.add('charge');
   btn.disabled = true;
   try {
-    const r = await api({ action: 'cloturer', type_periode: 'Mensuel',
+    const r = await api({ action: 'cloturer',
+                          type_periode: typePeriode || 'Mensuel',
                           debut: debut, fin: fin });
     if (r && r.ok) {
       vibrer([18, 60, 18]);
@@ -1666,6 +1885,70 @@ async function lancerCloture(btn, debut, fin) {
   }
 }
 window.lancerCloture = lancerCloture;
+
+
+/* --- Apport en nature : bascule des champs et envoi dedie --- */
+function majFormApport() {
+  const t = valeur('c-type');
+  const nature = (t === 'Apport en nature');
+  const z = document.getElementById('c-nature-champs');
+  if (z) z.style.display = nature ? 'block' : 'none';
+  const lab = document.getElementById('c-montant-label');
+  if (lab) lab.textContent = nature ? 'Valeur du bien' : 'Montant';
+  const mode = document.getElementById('c-mode');
+  if (mode) mode.disabled = nature;   // pas de mode de paiement pour un bien
+}
+
+async function envoyerApportNature(btn) {
+  const v = parseFloat(valeur('c-montant'));
+  if (!v || v <= 0) { erreurGlobale('Indiquez la valeur du bien.'); return; }
+  const des = valeur('c-nat-designation').trim();
+  if (!des) { erreurGlobale('Indiquez quel bien est apporte.'); return; }
+
+  const dev = deviseActive('c-devise');
+  if (!confirm('Apport en nature : ' + des + '\n'
+    + 'Valeur ' + v + ' ' + dev + '\n\n'
+    + "Le bien entre au bilan, l'associe est credite.\n"
+    + 'La tresorerie ne changera pas.')) return;
+
+  btn.classList.add('charge'); btn.disabled = true;
+  try {
+    const r = await api({ action: 'apport_nature', data: {
+      associe_id: valeur('c-associe'),
+      date: valeur('c-date'),
+      designation: des,
+      categorie_actif: valeur('c-nat-cat'),
+      valeur_saisie: v,
+      devise_saisie: dev,
+      duree_mois: parseFloat(valeur('c-nat-duree')) || 0,
+      valeur_residuelle: parseFloat(valeur('c-nat-residuelle')) || 0
+    }});
+    if (r && r.ok) {
+      afficher('msg-ctr', 'ok', r.message);
+      vibrer([18, 60, 18]);
+      document.getElementById('c-montant').value = '';
+      document.getElementById('c-nat-designation').value = '';
+      histoDonnees = [];
+      await chargerSoldes();
+    } else {
+      erreurGlobale((r && r.message) || 'Apport refuse.');
+    }
+  } catch (e) {
+    erreurGlobale('Apport en nature impossible hors ligne.');
+  } finally {
+    btn.classList.remove('charge'); btn.disabled = false;
+  }
+}
+
+
+/* --- Cloture a la demande (hebdomadaire ou periode libre) --- */
+async function clotureLibre(btn) {
+  const d = valeur('cl-debut'), f = valeur('cl-fin');
+  if (!d || !f) { erreurGlobale('Indiquez les deux dates.'); return; }
+  if (d > f) { erreurGlobale('La date de debut doit preceder la fin.'); return; }
+  await lancerCloture(btn, d, f, valeur('cl-type') || 'Mensuel');
+}
+window.clotureLibre = clotureLibre;
 
 /* ============================== Dettes ================================= */
 
@@ -2164,6 +2447,7 @@ function brancherUI() {
   brancherBascule('r-devise', () => apercuConversion('r-montant', 'r-devise', 'r-apercu'));
   brancherBascule('c-devise', () => apercuConversion('c-montant', 'c-devise', 'c-apercu'));
   brancherBascule('dt-devise');
+  on('c-type', 'change', majFormApport);
 
   on('d-actif', 'change', function (e) {
     var z = document.getElementById('d-actif-champs');
@@ -2247,6 +2531,10 @@ function brancherUI() {
   // ---- contribution ----
   on('c-envoyer', 'click', async (ev) => {
     const btn = ev.currentTarget;
+    if (valeur('c-type') === 'Apport en nature') {
+      await envoyerApportNature(btn);
+      return;
+    }
     const montant = parseFloat(document.getElementById('c-montant').value);
     if (!montant || montant <= 0) {
       afficher('msg-ctr', 'err', 'Indiquez un montant superieur a zero.'); return;
@@ -2347,7 +2635,7 @@ async function init() {
   setInterval(() => { if (CODE) synchroniser().catch(() => {}); }, 60000);
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js?v=16').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=19').catch(() => {});
   }
 }
 
