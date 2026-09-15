@@ -374,7 +374,7 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
     <button class="principal" id="cx-entrer" type="button"
             onclick="seConnecter(this)">Entrer</button>
     <p class="cx-note">Ce code identifie vos saisies. Ne le partagez pas.<br>
-      <span id="cx-version" style="opacity:.6">version 19</span></p>
+      <span id="cx-version" style="opacity:.6">version 20</span></p>
   </div>
 </div>
 
@@ -917,8 +917,15 @@ async function api(payload) {
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(Object.assign({ code: CODE }, payload))
   });
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  return await r.json();
+  if (!r.ok) throw new Error('Serveur HTTP ' + r.status);
+  const txt = await r.text();
+  try {
+    return JSON.parse(txt);
+  } catch (e) {
+    // Apps Script renvoie parfois une page HTML d'erreur au lieu du JSON
+    throw new Error('Reponse inattendue du serveur. Verifiez que le script '
+      + 'est deploye en nouvelle version et accessible a tout le monde.');
+  }
 }
 
 async function majReseau() {
@@ -1168,14 +1175,27 @@ async function chargerReference() {
 }
 
 async function chargerSoldes() {
-  let s = null;
+  let s = null, pb = null;
   try {
     s = await api({ action: 'soldes' });
-    if (s.ok) await cacheEcrire('soldes', s);
+    if (s && s.ok) await cacheEcrire('soldes', s);
+    else if (s && s.message) pb = s.message;
   } catch (e) {
+    pb = e.message || String(e);
     s = await cacheLire('soldes');
   }
-  if (!s || !s.ok) return;
+  if (!s || !s.ok) {
+    const el = document.getElementById('solde-ent');
+    if (el) el.textContent = '--';
+    const zl = document.getElementById('liste-soldes');
+    if (zl) {
+      zl.innerHTML = '<div class="vide">Soldes indisponibles.'
+        + (pb ? '<br><span style="font-size:12px">' + pb + '</span>' : '')
+        + '</div>';
+    }
+    if (pb) erreurGlobale('Soldes : ' + pb);
+    return;
+  }
 
   const neg = s.solde_entreprise_gdes < 0;
   const el = document.getElementById('solde-ent');
@@ -1290,6 +1310,22 @@ async function annulerCloture(debut, fin) {
   }
 }
 window.annulerCloture = annulerCloture;
+
+
+/* --- Appels sequentiels ---
+   Le serveur traite les requetes une par une (verrou d'ecriture).
+   Les lancer toutes en meme temps les met en file et fait expirer
+   le navigateur avant la reponse. On les enchaine donc. */
+async function sequenceSoldes() {
+  try { await chargerSoldes(); } catch (e) {}
+  try { await chargerEquilibrage(); } catch (e) {}
+  try { await chargerDettes(); } catch (e) {}
+}
+
+async function sequenceRapports() {
+  try { await chargerRapport(periodeEtats || 'mensuel'); } catch (e) {}
+  try { await chargerCloture(); } catch (e) {}
+}
 
 /* ======================= Rapprochement de caisse ======================== */
 
@@ -2434,11 +2470,9 @@ function brancherUI() {
       const vue = document.getElementById(b.dataset.v);
       if (vue) vue.classList.add('actif');
       window.scrollTo(0, 0);
-      if (b.dataset.v === 'v-soldes') {
-        chargerSoldes(); chargerEquilibrage(); chargerDettes();
-      }
+      if (b.dataset.v === 'v-soldes') sequenceSoldes();
       if (b.dataset.v === 'v-histo' && !histoDonnees.length) chargerHistorique();
-      if (b.dataset.v === 'v-rapport') chargerCloture();
+      if (b.dataset.v === 'v-rapport') sequenceRapports();
     });
   });
 
@@ -2614,7 +2648,7 @@ function brancherUI() {
       periodeEtats = b.dataset.p;
       const vueEtats = document.querySelector('#vue-rapport button.on');
       if (vueEtats && vueEtats.dataset.vue === 'etats') chargerEtats();
-      else { chargerRapport(b.dataset.p); chargerCloture(); }
+      else sequenceRapports();
     });
   });
 
@@ -2635,7 +2669,7 @@ async function init() {
   setInterval(() => { if (CODE) synchroniser().catch(() => {}); }, 60000);
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js?v=19').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=20').catch(() => {});
   }
 }
 
@@ -2667,7 +2701,8 @@ async function chargerApresConnexion() {
   try { await majReseau(); }          catch (e) {}
   try { await chargerReference(); }   catch (e) { erreurGlobale('reference : ' + e.message); }
   if (MOI && MOI.role === 'Admin') {
-    try { await chargerSoldes(); }    catch (e) { erreurGlobale('soldes : ' + e.message); }
+    try { await chargerSoldes(); }
+    catch (e) { erreurGlobale('soldes : ' + e.message); }
   }
   try { await synchroniser(); }       catch (e) {}
 }
