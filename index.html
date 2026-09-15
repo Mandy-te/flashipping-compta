@@ -374,7 +374,7 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
     <button class="principal" id="cx-entrer" type="button"
             onclick="seConnecter(this)">Entrer</button>
     <p class="cx-note">Ce code identifie vos saisies. Ne le partagez pas.<br>
-      <span id="cx-version" style="opacity:.6">version 22</span></p>
+      <span id="cx-version" style="opacity:.6">version 23</span></p>
   </div>
 </div>
 
@@ -1475,13 +1475,24 @@ async function chargerEquilibrage() {
       </div>`;
     }).join('') + `</div>`;
 
+  // Regroupe par acheteur : chacun peut regler sa part separement,
+  // sans attendre que les autres associes soient prets.
+  const parAcheteur = {};
+  planEq.transferts.forEach(t => {
+    if (!parAcheteur[t.acheteur_id]) {
+      parAcheteur[t.acheteur_id] = { nom: t.acheteur, total: 0, lignes: [] };
+    }
+    parAcheteur[t.acheteur_id].total += t.montant_gdes;
+    parAcheteur[t.acheteur_id].lignes.push(t);
+  });
+
   html += `<div class="eq-bloc">
     <h3>Transferts a effectuer</h3>
     <p class="expl">
       Cet argent ne rentre pas dans la caisse : il va aux associes qui ont
       finance au-dela de leur part. La valeur de l'entreprise ne change pas.
-    </p>` +
-    (planEq.cloture_requise
+    </p>
+    ${planEq.cloture_requise
       ? `<div class="bloque" style="margin-bottom:12px">
            <strong>Cloturez la periode avant d'enregistrer ces transferts.</strong><br>
            Tant que le profit n'est pas fige, il continue d'etre reparti selon
@@ -1489,40 +1500,64 @@ async function chargerEquilibrage() {
            gagne serait redistribue retroactivement et les parts finales
            seraient fausses. Onglet Rapports, en bas : Cloture mensuelle.
          </div>`
-      : '') +
-    planEq.transferts.map(t => `<div class="eq-transfert">
-      <div>
-        <span class="qui"><strong>${t.acheteur}</strong></span>
-        <span class="fleche">paie a</span>
-        <span class="qui"><strong>${t.vendeur}</strong></span>
-      </div>
-      <div class="m">${gdes(t.montant_gdes)}</div>
-    </div>`).join('') +
-    (planEq.cloture_requise
-      ? `<p class="expl" style="margin:10px 0 0">
-           Enregistrement possible apres la cloture.</p>`
-      : `<button class="principal" onclick="enregistrerTousRachats(this)">
-           Enregistrer ces ${planEq.transferts.length} transferts</button>
-         <p class="expl" style="margin:10px 0 0">
-           A faire seulement une fois l'argent reellement remis.</p>`)
-   + `</div>`;
+      : ''}
+  </div>`;
+
+  Object.keys(parAcheteur).forEach(id => {
+    const g = parAcheteur[id];
+    html += `<div class="eq-bloc">
+      <h3>${g.nom}</h3>
+      <p class="expl" style="margin:0 0 8px">
+        Doit verser au total <b>${gdes(g.total)}</b></p>` +
+      g.lignes.map(t => `<div class="eq-transfert">
+        <div><span class="fleche">a</span>
+          <span class="qui"><strong>${t.vendeur}</strong></span></div>
+        <div class="m">${gdes(t.montant_gdes)}</div>
+      </div>`).join('') +
+      (planEq.cloture_requise
+        ? `<p class="expl" style="margin:10px 0 0">
+             Enregistrement possible apres la cloture.</p>`
+        : `<button class="principal" onclick="enregistrerRachatsDe(this,'${id}')">
+             Enregistrer le paiement de ${g.nom.split(' ')[0]}</button>
+           <p class="expl" style="margin:10px 0 0">
+             A faire seulement une fois l'argent reellement remis.</p>`)
+      + `</div>`;
+  });
+
+  if (!planEq.cloture_requise && Object.keys(parAcheteur).length > 1) {
+    html += `<button class="principal" onclick="enregistrerTousRachats(this)"
+      style="background:var(--encre);color:#fff;margin-bottom:24px">
+      Tout enregistrer d'un coup (${planEq.transferts.length} transferts)</button>`;
+  }
 
   zone.innerHTML = html;
 }
 
-async function enregistrerTousRachats(btn) {
-  if (!planEq || !planEq.transferts.length) return;
 
-  if (!confirm('Enregistrer ' + planEq.transferts.length + ' transfert(s) ?\n\n'
-    + 'Total : ' + gdes(planEq.total_a_transferer_gdes) + '\n\n'
-    + "A ne faire qu'une fois l'argent reellement remis de la main a la main.\n"
-    + 'Les parts passeront ensuite a 40/20/20/20.')) return;
+/** Enregistre uniquement les transferts d'un acheteur donne. */
+async function enregistrerRachatsDe(btn, acheteurId) {
+  if (!planEq) return;
+  const lignes = planEq.transferts.filter(t => t.acheteur_id === acheteurId);
+  if (!lignes.length) return;
 
+  const nom = lignes[0].acheteur;
+  const total = lignes.reduce((s, t) => s + t.montant_gdes, 0);
+
+  if (!confirm(nom + ' a-t-il reellement verse ' + gdes(total) + ' ?\n\n'
+    + lignes.map(t => '  ' + gdes(t.montant_gdes) + ' a ' + t.vendeur).join('\n')
+    + '\n\nN\'enregistrez que si l\'argent a bien change de mains.')) return;
+
+  await executerRachats(btn, lignes);
+}
+window.enregistrerRachatsDe = enregistrerRachatsDe;
+
+/** Coeur commun : envoie une liste de transferts, un par un. */
+async function executerRachats(btn, lignes) {
   btn.classList.add('charge');
   btn.disabled = true;
 
   let faits = 0, echecs = [];
-  for (const t of planEq.transferts) {
+  for (const t of lignes) {
     try {
       const r = await api({
         action: 'rachat',
@@ -1544,6 +1579,7 @@ async function enregistrerTousRachats(btn) {
   btn.disabled = false;
   vibrer([18, 60, 18]);
 
+  histoDonnees = [];
   await chargerSoldes();
   await chargerEquilibrage();
 
@@ -1551,6 +1587,18 @@ async function enregistrerTousRachats(btn) {
     erreurGlobale(faits + ' transfert(s) enregistres, '
       + echecs.length + ' en echec :\n' + echecs.join('\n'));
   }
+}
+
+async function enregistrerTousRachats(btn) {
+  if (!planEq || !planEq.transferts.length) return;
+
+  const n = planEq.transferts.length;
+  if (!confirm('Enregistrer les ' + n + ' transferts ?\n\n'
+    + 'Total : ' + gdes(planEq.total_a_transferer_gdes) + '\n\n'
+    + "A ne faire qu'une fois tout l'argent reellement remis.\n"
+    + 'Les parts passeront ensuite a 40/20/20/20.')) return;
+
+  await executerRachats(btn, planEq.transferts);
 }
 window.enregistrerTousRachats = enregistrerTousRachats;
 
@@ -2669,7 +2717,7 @@ async function init() {
   setInterval(() => { if (CODE) synchroniser().catch(() => {}); }, 60000);
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js?v=22').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=23').catch(() => {});
   }
 }
 
