@@ -374,7 +374,7 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
     <button class="principal" id="cx-entrer" type="button"
             onclick="seConnecter(this)">Entrer</button>
     <p class="cx-note">Ce code identifie vos saisies. Ne le partagez pas.<br>
-      <span id="cx-version" style="opacity:.6">version 23</span></p>
+      <span id="cx-version" style="opacity:.6">version 25</span></p>
   </div>
 </div>
 
@@ -432,6 +432,13 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
       <input type="text" id="d-desc" placeholder="Ex : lot Boxpaq semaine 24 août">
 
       <div class="apercu" id="d-apercu">Saisissez un montant pour voir la conversion.</div>
+
+      <label class="coche">
+        <input type="checkbox" id="d-stock">
+        <span>Cette dépense fait <b>entrer des colis en stock</b>
+          (lot, transit, douane). Elle ne sera comptée en charge
+          qu'à la livraison des colis.</span>
+      </label>
 
       <label class="coche">
         <input type="checkbox" id="d-actif">
@@ -616,6 +623,37 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
       <div class="vide">Chargement…</div>
     </div>
     <button class="principal" id="s-rafraichir">Actualiser</button>
+
+    <div style="margin-top:26px">
+      <h2>Stock de colis</h2>
+      <div class="eq-bloc">
+        <p class="expl">
+          Ce que les colis <b>non encore livrés</b> vous ont coûté.
+          Payer pour récupérer un lot n'appauvrit pas l'entreprise :
+          le cash devient de la marchandise. La charge ne sera réelle
+          qu'à la livraison, quand le client paie.
+        </p>
+        <div id="stock-actuel"></div>
+        <label for="st-valeur">Coût des colis en attente (gourdes)</label>
+        <input type="number" id="st-valeur" inputmode="decimal" step="0.01"
+               placeholder="0.00">
+        <div class="paire">
+          <div>
+            <label for="st-nb">Nombre de colis</label>
+            <input type="number" id="st-nb" inputmode="numeric" placeholder="0">
+          </div>
+          <div>
+            <label for="st-date">Date d'inventaire</label>
+            <input type="date" id="st-date">
+          </div>
+        </div>
+        <label for="st-note">Note</label>
+        <input type="text" id="st-note" placeholder="Ex : lot du 9 septembre">
+        <button class="principal" onclick="enregistrerStock(this)">
+          Enregistrer l'inventaire</button>
+      </div>
+      <div id="stock-rapprochement"></div>
+    </div>
 
     <div style="margin-top:26px">
       <h2>Rapprochement de caisse</h2>
@@ -1206,9 +1244,10 @@ async function chargerSoldes() {
 
   const zv = document.getElementById('valeur-ent');
   if (zv) {
-    if (s.actifs_nets_gdes > 0 || s.flux_dette_gdes) {
+    if (s.actifs_nets_gdes > 0 || s.flux_dette_gdes || s.stock_gdes > 0) {
       let d = 'Valeur de l\'entreprise <b>' + gdes(s.valeur_entreprise_gdes) + '</b>';
       if (s.actifs_nets_gdes > 0) d += '<br>actifs nets ' + gdes(s.actifs_nets_gdes);
+      if (s.stock_gdes > 0) d += '<br>stock de colis ' + gdes(s.stock_gdes);
       if (s.apports_nature_gdes > 0) d += ' &middot; dont apports en nature '
         + gdes(s.apports_nature_gdes);
       if (s.flux_dette_gdes > 0) d += '<br>dont ' + gdes(s.flux_dette_gdes)
@@ -1320,11 +1359,137 @@ async function sequenceSoldes() {
   try { await chargerSoldes(); } catch (e) {}
   try { await chargerEquilibrage(); } catch (e) {}
   try { await chargerDettes(); } catch (e) {}
+  try { await chargerStock(); } catch (e) {}
+  try { await chargerRapprochementStock(); } catch (e) {}
 }
 
 async function sequenceRapports() {
   try { await chargerRapport(periodeEtats || 'mensuel'); } catch (e) {}
   try { await chargerCloture(); } catch (e) {}
+}
+
+
+/* ============================== Stock ================================== */
+
+async function chargerStock() {
+  const zone = document.getElementById('stock-actuel');
+  if (!zone) return;
+  if (!MOI || MOI.role !== 'Admin') return;
+
+  let r = null;
+  try { r = await api({ action: 'stock' }); } catch (e) { return; }
+  if (!r || !r.ok) return;
+
+  if (!r.connu) {
+    zone.innerHTML = `<div class="apercu" style="margin-bottom:12px">
+      Aucun inventaire enregistre. Tant que le stock n'est pas evalue,
+      la valeur de l'entreprise est sous-estimee apres chaque gros lot.</div>`;
+    return;
+  }
+
+  zone.innerHTML = `<div class="ligne" style="margin-bottom:8px">
+    <div class="g"><div class="nom">Stock actuel</div>
+      <div class="meta">Inventaire du ${r.date}
+        ${r.nb_colis > 0 ? ' &middot; ' + r.nb_colis + ' colis' : ''}
+        ${r.note ? '<br>' + r.note : ''}</div></div>
+    <div class="val">${gdes(r.valeur)}</div>
+  </div>`;
+}
+
+async function enregistrerStock(btn) {
+  const v = parseFloat(valeur('st-valeur'));
+  if (isNaN(v) || v < 0) { erreurGlobale('Indiquez le cout des colis en attente.'); return; }
+
+  if (!confirm('Enregistrer un stock de ' + gdes(v) + ' ?\n\n'
+    + "Il s'agit du COUT des colis non livres, pas de ce que\n"
+    + 'les clients paieront.')) return;
+
+  btn.classList.add('charge'); btn.disabled = true;
+  try {
+    const r = await api({ action: 'enregistrer_stock', data: {
+      valeur_stock_gdes: v,
+      nb_colis: parseFloat(valeur('st-nb')) || 0,
+      date: valeur('st-date') || undefined,
+      note: valeur('st-note')
+    }});
+    if (r && r.ok) {
+      vibrer([18, 60, 18]);
+      document.getElementById('st-valeur').value = '';
+      document.getElementById('st-nb').value = '';
+      document.getElementById('st-note').value = '';
+      await chargerSoldes();
+      await chargerStock();
+      await chargerRapprochementStock();
+      await chargerEquilibrage();
+    } else {
+      erreurGlobale((r && r.message) || 'Enregistrement refuse.');
+    }
+  } catch (e) {
+    erreurGlobale('Enregistrement impossible hors ligne.');
+  } finally {
+    btn.classList.remove('charge'); btn.disabled = false;
+  }
+}
+window.enregistrerStock = enregistrerStock;
+
+
+async function chargerRapprochementStock() {
+  const zone = document.getElementById('stock-rapprochement');
+  if (!zone || !MOI || MOI.role !== 'Admin') return;
+
+  let r = null;
+  try { r = await api({ action: 'rapprochement_stock', type: 'mensuel' }); }
+  catch (e) { return; }
+  if (!r || !r.ok) return;
+  if (r.entrees_gdes === 0 && r.stock_debut_gdes === 0) { zone.innerHTML = ''; return; }
+
+  const alerte = !r.coherent;
+
+  zone.innerHTML = `<div class="eq-bloc">
+    <h3>Mouvements du mois</h3>
+    <p class="expl" style="margin:0 0 10px">
+      Du ${r.debut} au ${r.fin}. Les sorties se deduisent :
+      il n'y a rien a saisir colis par colis.
+    </p>
+
+    <div class="ligne"><div class="g"><div class="nom"
+      style="font-size:14px;font-weight:500">Stock au debut</div>
+      ${r.stock_debut_date ? `<div class="meta">Inventaire du ${r.stock_debut_date}</div>` : ''}
+      </div><div class="val">${gdes(r.stock_debut_gdes)}</div></div>
+
+    <div class="ligne"><div class="g"><div class="nom"
+      style="font-size:14px;font-weight:500">+ Entrees</div>
+      <div class="meta">${r.nb_lots} lot(s) recu(s) ce mois</div></div>
+      <div class="val pos">${gdes(r.entrees_gdes)}</div></div>
+
+    <div class="ligne"><div class="g"><div class="nom"
+      style="font-size:14px;font-weight:500">&minus; Stock a la fin</div>
+      <div class="meta">${r.stock_fin_connu
+        ? 'Inventaire du ' + r.stock_fin_date
+          + (r.stock_fin_nb_colis > 0 ? ' &middot; ' + r.stock_fin_nb_colis + ' colis restants' : '')
+        : 'Pas encore compte'}</div></div>
+      <div class="val">${gdes(r.stock_fin_gdes)}</div></div>
+
+    <div class="tot"><span>= Cout des colis livres</span>
+      <span class="neg">${gdes(r.sorties_gdes)}</span></div>
+
+    ${alerte
+      ? `<div class="bloque" style="margin-top:12px">
+           Sorties negatives : le stock final depasse debut + entrees.
+           Verifiez l'inventaire ou les entrees non marquees.</div>`
+      : !r.stock_fin_connu
+        ? `<p class="expl" style="margin:10px 0 0">
+             Comptez le stock restant ci-dessus pour obtenir le vrai
+             cout des colis livres ce mois.</p>`
+        : ''}
+
+    ${r.lots.length ? `<div class="sect">Lots entres ce mois</div>` +
+      r.lots.map(l => `<div class="ligne">
+        <div class="g"><div class="nom" style="font-size:14px;font-weight:500">
+          ${l.objet}</div>
+          <div class="meta">${l.date}${l.description ? ' &middot; ' + l.description : ''}</div>
+        </div><div class="val">${gdes(l.montant_gdes)}</div></div>`).join('') : ''}
+  </div>`;
 }
 
 /* ======================= Rapprochement de caisse ======================== */
@@ -1439,6 +1604,10 @@ async function chargerEquilibrage() {
       <div class="g"><div class="nom">Actifs nets</div>
         <div class="meta">Biens, apres usure</div></div>
       <div class="val">${gdes(planEq.actifs_nets_gdes || 0)}</div></div>
+    ${planEq.stock_gdes > 0 ? `<div class="ligne">
+      <div class="g"><div class="nom">Stock de colis</div>
+        <div class="meta">Payes, non encore livres</div></div>
+      <div class="val">${gdes(planEq.stock_gdes)}</div></div>` : ''}
     <p class="expl" style="margin-top:10px">
       Une part porte sur cette valeur : tresorerie <b>et</b> actifs, profits
       compris. Elle augmente quand l'entreprise gagne, donc entrer coute
@@ -2268,6 +2437,10 @@ async function chargerEtats() {
     <div class="ligne"><div class="g"><div class="nom"
       style="font-size:14px;font-weight:500">Tresorerie</div></div>
       <div class="val">${gdes(B.actif_circulant.tresorerie)}</div></div>
+    ${B.actif_circulant.stock > 0 ? `<div class="ligne"><div class="g"><div class="nom"
+      style="font-size:14px;font-weight:500">Stock de colis</div>
+      <div class="meta">Colis payes, non encore livres</div></div>
+      <div class="val">${gdes(B.actif_circulant.stock)}</div></div>` : ''}
     <div class="ligne"><div class="g"><div class="nom"
       style="font-size:14px;font-weight:500">Immobilisations nettes</div>
       <div class="meta">Brut ${gdes(B.actif_immobilise.valeur_brute)}
@@ -2504,7 +2677,7 @@ window.seConnecter = seConnecter;
 
 /* --- Branchement de l'interface : SYNCHRONE, aucune dependance reseau/DB --- */
 function brancherUI() {
-  ['d-date', 'r-date', 'c-date'].forEach(function (id) {
+  ['d-date', 'r-date', 'c-date', 'st-date'].forEach(function (id) {
     var el = document.getElementById(id);
     if (el) el.value = aujourdhui();
   });
@@ -2531,7 +2704,22 @@ function brancherUI() {
   brancherBascule('dt-devise');
   on('c-type', 'change', majFormApport);
 
+  on('d-stock', 'change', function (e) {
+    if (e.target.checked) {
+      var a = document.getElementById('d-actif');
+      if (a && a.checked) {
+        a.checked = false;
+        var z = document.getElementById('d-actif-champs');
+        if (z) z.style.display = 'none';
+      }
+    }
+  });
+
   on('d-actif', 'change', function (e) {
+    if (e.target.checked) {
+      var st = document.getElementById('d-stock');
+      if (st) st.checked = false;
+    }
     var z = document.getElementById('d-actif-champs');
     if (z) z.style.display = e.target.checked ? 'block' : 'none';
   });
@@ -2560,6 +2748,7 @@ function brancherUI() {
         devise_saisie: deviseActive('d-devise'),
         urgente_hors_solde: document.getElementById('d-urgente').checked ? 'Oui' : 'Non',
         est_actif: document.getElementById('d-actif').checked ? 'Oui' : 'Non',
+        entree_stock: document.getElementById('d-stock').checked ? 'Oui' : 'Non',
         categorie_actif: valeur('d-actif-cat'),
         duree_mois: parseFloat(valeur('d-duree')) || 0,
         valeur_residuelle: parseFloat(valeur('d-residuelle')) || 0
@@ -2569,6 +2758,8 @@ function brancherUI() {
         document.getElementById('d-urgente').checked = false;
         var ca = document.getElementById('d-actif');
         if (ca) { ca.checked = false; }
+        var cs = document.getElementById('d-stock');
+        if (cs) cs.checked = false;
         var cz = document.getElementById('d-actif-champs');
         if (cz) cz.style.display = 'none';
         document.getElementById('d-apercu').textContent =
@@ -2717,7 +2908,7 @@ async function init() {
   setInterval(() => { if (CODE) synchroniser().catch(() => {}); }, 60000);
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js?v=23').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=25').catch(() => {});
   }
 }
 
