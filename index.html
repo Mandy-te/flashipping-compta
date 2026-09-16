@@ -374,7 +374,7 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px}
     <button class="principal" id="cx-entrer" type="button"
             onclick="seConnecter(this)">Entrer</button>
     <p class="cx-note">Ce code identifie vos saisies. Ne le partagez pas.<br>
-      <span id="cx-version" style="opacity:.6">version 25</span></p>
+      <span id="cx-version" style="opacity:.6">version 26</span></p>
   </div>
 </div>
 
@@ -2908,7 +2908,7 @@ async function init() {
   setInterval(() => { if (CODE) synchroniser().catch(() => {}); }, 60000);
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js?v=25').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=26').catch(() => {});
   }
 }
 
